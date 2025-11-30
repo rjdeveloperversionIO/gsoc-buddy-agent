@@ -45,10 +45,12 @@ jobs:
           
           echo "✅ Fetched data for ${#ORGS[@]} organizations"
       
-      - name: Commit and push data
-        run: |
+           - name: Commit and push data
+             run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add data/
           git commit -m "Update GSoC organization data" || echo "No changes to commit"
           git push
+          env:
+          GITHUB_TOKEN: ${{ github.token }}
