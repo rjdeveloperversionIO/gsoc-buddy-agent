@@ -22,9 +22,18 @@ jobs:
       
       - name: Create service account key file
         run: |
-          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}' > service_account_raw.json
-          cat service_account_raw.json > service_account.json
-      
+          # Write the secret directly to the file
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT }}' > service_account.json
+          
+          # Check if the file exists and has content
+          if [ ! -s service_account.json ]; then
+            echo "Error: service_account.json is empty"
+            exit 1
+          fi
+          
+          # Print file size
+          echo "Service account file size:"
+          ls -la service_account.json
       - name: Enrich organization data
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
