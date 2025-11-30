@@ -19,12 +19,16 @@ jobs:
       
       - name: Install dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
           python -m pip install --upgrade pip
           pip install requests beautifulsoup4 pandas gspread oauth2client
       
       - name: Create service account key file
         run: |
-          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}' > service_account.json
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}' > service_account_raw.json
+          # Ensure the JSON is properly formatted
+          cat service_account_raw.json | jq . > service_account.json
       
       - name: Collect GSoC historical data
         run: |
