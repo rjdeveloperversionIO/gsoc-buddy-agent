@@ -1,9 +1,10 @@
 name: Collect GSoC Historical Organizations
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # Allows manual triggering
   schedule:
-    - cron: '0 0 1 * *'
+    - cron: '0 0 1 * *'  # Run monthly on the 1st
+
 jobs:
   collect-history:
     runs-on: ubuntu-latest
@@ -18,16 +19,12 @@ jobs:
       
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y jq
           python -m pip install --upgrade pip
           pip install requests beautifulsoup4 pandas gspread oauth2client
       
       - name: Create service account key file
         run: |
-          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}' > service_account_raw.json
-          # Ensure the JSON is properly formatted
-          cat service_account_raw.json | jq . > service_account.json
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}' > service_account.json
       
       - name: Collect GSoC historical data
         run: |
@@ -82,100 +79,54 @@ jobs:
               print(f"Scraping organizations for GSoC {year}...")
               
               try:
-                  headers = {
-                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                  }
-                  response = requests.get(url, headers=headers)
+                  response = requests.get(url)
                   response.raise_for_status()
                   
-                  # Debug: Save the HTML to inspect
-                  with open(f"gsoc_{year}_page.html", "w") as f:
-                      f.write(response.text)
-                  
                   soup = BeautifulSoup(response.text, 'html.parser')
-                  
-                  # Print some debug info
-                  print(f"Page title: {soup.title.string if soup.title else 'No title'}")
-                  print(f"Page length: {len(response.text)} characters")
-                  
                   orgs = []
                   
-                  # For 2024, use a simpler approach - just look for organization names
-                  if year == 2024:
-                      # Try different selectors that might contain organization names
-                      org_elements = soup.select('.organization-card, .org-card, .gsoc-org, h3, h4')
-                      print(f"Found {len(org_elements)} potential organization elements")
-                      
-                      for elem in org_elements:
-                          name = elem.text.strip()
-                          if name and len(name) > 3 and len(name) < 100:  # Basic validation
-                              orgs.append({
-                                  'name': name,
-                                  'website': None,
-                                  'github_org': None,
-                                  'description': None,
-                                  'gsoc_years': [str(year)]
-                              })
-                  
-                  # For older years, try a more specific approach
+                  # Different scraping logic based on year (different page structures)
+                  if year >= 2023:
+                      # 2023-2024 format
+                      org_cards = soup.select('.organization-card')
+                      for card in org_cards:
+                          name_elem = card.select_one('.organization-card__name')
+                          name = name_elem.text.strip() if name_elem else "Unknown"
+                          
+                          link_elem = card.select_one('a')
+                          org_url = link_elem['href'] if link_elem and 'href' in link_elem.attrs else None
+                          
+                          # Get full org details from the org page
+                          if org_url and not org_url.startswith('http'):
+                              org_url = f"https://summerofcode.withgoogle.com{org_url}"
+                          
+                          orgs.append({
+                              'name': name,
+                              'website': org_url,
+                              'github_org': None,  # Will try to find later
+                              'description': None,
+                              'gsoc_years': [str(year)]
+                          })
                   else:
-                      # Try different selectors for different years
-                      org_cards = soup.select('.organization-card, .org-card, .gsoc-org')
-                      print(f"Found {len(org_cards)} organization cards")
-                      
-                      if not org_cards:
-                          # If no cards found, try a more generic approach
-                          org_sections = soup.select('div, section')
-                          for section in org_sections:
-                              if section.find('h3') or section.find('h4'):
-                                  name_elem = section.find('h3') or section.find('h4')
-                                  name = name_elem.text.strip() if name_elem else "Unknown"
-                                  
-                                  orgs.append({
-                                      'name': name,
-                                      'website': None,
-                                      'github_org': None,
-                                      'description': None,
-                                      'gsoc_years': [str(year)]
-                                  })
-                      else:
-                          for card in org_cards:
-                              name_elem = card.select_one('h3, h4, .name, .title')
-                              name = name_elem.text.strip() if name_elem else "Unknown"
-                              
-                              desc_elem = card.select_one('p, .description, .tagline')
-                              description = desc_elem.text.strip() if desc_elem else None
-                              
-                              link_elem = card.select_one('a')
-                              org_url = link_elem['href'] if link_elem and 'href' in link_elem.attrs else None
-                              
-                              orgs.append({
-                                  'name': name,
-                                  'website': org_url,
-                                  'github_org': None,
-                                  'description': description,
-                                  'gsoc_years': [str(year)]
-                              })
-                  
-                  # If we still have no organizations, use a fallback approach
-                  if not orgs:
-                      # For 2024, use a hardcoded list of known organizations
-                      if year == 2024:
-                          known_orgs_2024 = [
-                              "Zulip", "TensorFlow", "Python Software Foundation", 
-                              "The Linux Foundation", "GNOME", "KDE", "Mozilla",
-                              "Wikimedia Foundation", "Apache Software Foundation",
-                              "Drupal", "JBoss Community", "LibreOffice", "CERN",
-                              "Blender Foundation", "Debian", "Django Software Foundation"
-                          ]
-                          for name in known_orgs_2024:
-                              orgs.append({
-                                  'name': name,
-                                  'website': None,
-                                  'github_org': None,
-                                  'description': None,
-                                  'gsoc_years': [str(year)]
-                              })
+                      # 2016-2022 format
+                      org_cards = soup.select('.organization-card')
+                      for card in org_cards:
+                          name_elem = card.select_one('.organization-card__name')
+                          name = name_elem.text.strip() if name_elem else "Unknown"
+                          
+                          desc_elem = card.select_one('.organization-card__tagline')
+                          description = desc_elem.text.strip() if desc_elem else None
+                          
+                          link_elem = card.select_one('a')
+                          org_url = link_elem['href'] if link_elem and 'href' in link_elem.attrs else None
+                          
+                          orgs.append({
+                              'name': name,
+                              'website': org_url,
+                              'github_org': None,
+                              'description': description,
+                              'gsoc_years': [str(year)]
+                          })
                   
                   print(f"Found {len(orgs)} organizations for {year}")
                   return orgs, len(orgs)
@@ -214,29 +165,12 @@ jobs:
               time.sleep(2)
 
           # Update GSoC_Years sheet
-          # Get existing data
-          existing_years = years_sheet.get_all_values()
-          
-          # If there's only a header row or empty, we can just append
-          if len(existing_years) <= 1:
-              if years_data:
-                  years_sheet.append_rows(years_data)
-                  print(f"Added {len(years_data)} years to empty GSoC_Years sheet")
-          else:
-              # Otherwise, update existing rows or append new ones
-              existing_years_dict = {row[0]: row for row in existing_years[1:] if row and len(row) > 0}
-              
-              for year_row in years_data:
-                  year_str = str(year_row[0])
-                  if year_str in existing_years_dict:
-                      # Update existing row
-                      row_idx = existing_years.index(existing_years_dict[year_str]) + 1  # +1 for header
-                      years_sheet.update(f'A{row_idx}:D{row_idx}', [year_row])
-                      print(f"Updated data for year {year_str}")
-                  else:
-                      # Append new row
-                      years_sheet.append_row(year_row)
-                      print(f"Added new year {year_str}")
+          # Clear existing data except header
+          years_sheet.resize(rows=1)
+          # Append new data
+          if years_data:
+              years_sheet.append_rows(years_data)
+              print(f"Updated GSoC_Years sheet with {len(years_data)} years")
 
           # Prepare organizations data for sheet
           orgs_data = []
@@ -287,14 +221,8 @@ jobs:
           EOF
           
           python collect_gsoc_history.py
-          
-          # Display the HTML files for debugging
-          echo "HTML file sizes:"
-          ls -la gsoc_*_page.html
       
-      - name: Upload HTML files as artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: gsoc-html-pages
-          path: gsoc_*_page.html
-          retention-days: 1
+      - name: Clean up
+        run: |
+          rm service_account.json
+          rm collect_gsoc_history.py
