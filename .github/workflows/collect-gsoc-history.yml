@@ -174,14 +174,13 @@ jobs:
               # Be nice to the server
               time.sleep(2)
 
-          # Update GSoC_Years sheet
-          # Clear existing data except header
-          years_sheet.resize(rows=1)
-          # Append new data
-          if years_data:
-              years_sheet.append_rows(years_data)
-              print(f"Updated GSoC_Years sheet with {len(years_data)} years")
-
+         # Update GSoC_Years sheet
+         # Get existing data
+         existing_years = years_sheet.get_all_values()
+         if len(existing_years) > 1:
+            # Clear existing data except header (delete rows one by one)
+            for i in range(len(existing_years) - 1, 0, -1):
+               years_sheet.delete_row(i + 1)  # +1 because rows are 1-indexed
           # Prepare organizations data for sheet
           orgs_data = []
           for name, org in all_orgs.items():
