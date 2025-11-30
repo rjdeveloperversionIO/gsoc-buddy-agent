@@ -12,8 +12,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       
-      - name: Make API script executable
-        run: chmod +x ./scripts/github-api.sh
+      - name: Create API script
+        run: |
+          mkdir -p scripts
+          cat > scripts/github-api.sh << 'EOF'
+          #!/bin/bash
+          
+          # Configuration
+          API_BASE="https://api.github.com"
+          MAX_RETRIES=3
+          RETRY_DELAY=5
+          
+          # Check if GITHUB_TOKEN is set
+          if [ -z "$GITHUB_TOKEN" ]; then
+            echo "Error: GITHUB_TOKEN environment variable is not set"
+            exit 1
+          fi
+          
+          # Parse arguments
+          ENDPOINT=$1
+          METHOD=${2:-GET}
+          DATA=${3:-""}
+          
+          # Make the API request
+          if [ "$METHOD" = "GET" ]; then
+            curl -s -H "Authorization: token $GITHUB_TOKEN" "$API_BASE$ENDPOINT"
+          else
+            curl -s -X "$METHOD" -H "Authorization: token $GITHUB_TOKEN" \
+                  -H "Content-Type: application/json" -d "$DATA" \
+                  "$API_BASE$ENDPOINT"
+          fi
+          EOF
+          
+          chmod +x scripts/github-api.sh
       
       - name: Fetch sample GSoC organizations
         env:
@@ -24,7 +55,7 @@ jobs:
           # Create data directory if it doesn't exist
           mkdir -p data
           
-          # Sample list of known GSoC organizations (we'll expand this later)
+          # Sample list of known GSoC organizations
           ORGS=("zulip" "tensorflow" "kubernetes" "mozilla" "wikimedia")
           
           # Fetch each organization's data
@@ -44,13 +75,15 @@ jobs:
           done
           
           echo "✅ Fetched data for ${#ORGS[@]} organizations"
+          
+          # Display the data
+          echo "Organization data:"
+          ls -la data/
+          cat data/zulip-info.json | jq .
       
-           - name: Commit and push data
-             run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add data/
-          git commit -m "Update GSoC organization data" || echo "No changes to commit"
-          git push
-          env:
-          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload data as artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: gsoc-org-data
+          path: data/
+          retention-days: 7
