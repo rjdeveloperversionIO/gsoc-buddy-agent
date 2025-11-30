@@ -1,1 +1,65 @@
+name: GitHub API Test
 
+on:
+  workflow_dispatch:  # Allows manual triggering
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly on Sunday at midnight
+
+jobs:
+  test-github-api:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Test GitHub API Authentication
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+        run: |
+          echo "Testing GitHub API Authentication..."
+          
+          # Test authentication by getting the authenticated user
+          AUTH_TEST=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+                      https://api.github.com/user)
+          
+          # Check if authentication was successful
+          if echo $AUTH_TEST | grep -q "login"; then
+            echo "✅ Authentication successful!"
+            echo "Authenticated as: $(echo $AUTH_TEST | jq -r .login)"
+          else
+            echo "❌ Authentication failed!"
+            echo $AUTH_TEST
+            exit 1
+          fi
+          
+          # Check rate limit status
+          RATE_LIMIT=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+                       https://api.github.com/rate_limit)
+          
+          echo "📊 API Rate Limit Status:"
+          echo "Remaining requests: $(echo $RATE_LIMIT | jq -r .rate.remaining)"
+          echo "Limit resets at: $(date -d @$(echo $RATE_LIMIT | jq -r .rate.reset))"
+          
+          # Test fetching a sample GSoC organization (Zulip)
+          echo "🔍 Fetching sample GSoC organization (Zulip)..."
+          ORG_DATA=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+                    https://api.github.com/orgs/zulip)
+          
+          echo "Organization: $(echo $ORG_DATA | jq -r .name)"
+          echo "Description: $(echo $ORG_DATA | jq -r .description)"
+          echo "Public Repos: $(echo $ORG_DATA | jq -r .public_repos)"
+          
+          # Test fetching beginner-friendly issues
+          echo "🔍 Fetching beginner-friendly issues from Zulip..."
+          ISSUES=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+                  "https://api.github.com/repos/zulip/zulip/issues?labels=good%20first%20issue&state=open&per_page=5")
+          
+          ISSUE_COUNT=$(echo $ISSUES | jq length)
+          echo "Found $ISSUE_COUNT beginner-friendly issues"
+          
+          if [ $ISSUE_COUNT -gt 0 ]; then
+            echo "Sample issue titles:"
+            echo $ISSUES | jq -r '.[].title'
+          fi
+          
+          echo "✅ GitHub API Test Completed Successfully!"
