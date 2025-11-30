@@ -26,7 +26,7 @@ jobs:
       
       - name: Create service account key file
         run: |
-          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}' > service_account_raw.json
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT }}' > service_account_raw.json
           # Ensure the JSON is properly formatted
           cat service_account_raw.json | jq . > service_account.json
       
