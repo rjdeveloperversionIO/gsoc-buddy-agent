@@ -1,0 +1,238 @@
+name: Enrich Organization Data
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  enrich-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pandas gspread oauth2client
+      
+      - name: Create service account key file
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}' > service_account_raw.json
+          cat service_account_raw.json > service_account.json
+      
+      - name: Enrich organization data
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
+        run: |
+          cat > enrich_org_data.py << 'EOF'
+          import requests
+          import json
+          import time
+          import pandas as pd
+          import gspread
+          from oauth2client.service_account import ServiceAccountCredentials
+          from datetime import datetime
+          import os
+
+          # Get GitHub token from environment
+          github_token = os.environ.get('GITHUB_TOKEN')
+          if not github_token:
+              raise ValueError("GITHUB_TOKEN environment variable is not set")
+
+          # Configure Google Sheets API
+          scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+          credentials = ServiceAccountCredentials.from_json_keyfile_name('service_account.json', scope)
+          gc = gspread.authorize(credentials)
+
+          # Open the spreadsheet - use your existing sheet ID
+          spreadsheet = gc.open_by_key('19PfXdNw--raP07c3tLzOBYcAC44-AfPeM-nxI8t4cKA')
+          orgs_sheet = spreadsheet.worksheet('Organizations')
+          config_sheet = spreadsheet.worksheet('Config')
+
+          # GitHub API functions
+          def github_api_request(endpoint, params=None):
+              url = f"https://api.github.com{endpoint}"
+              headers = {
+                  'Authorization': f'token {github_token}',
+                  'Accept': 'application/vnd.github.v3+json'
+              }
+              
+              # Check rate limit before making request
+              rate_limit = check_rate_limit()
+              if rate_limit['remaining'] < 10:
+                  wait_time = rate_limit['reset'] - int(time.time()) + 10
+                  print(f"Rate limit low ({rate_limit['remaining']}). Waiting {wait_time} seconds...")
+                  time.sleep(wait_time)
+              
+              response = requests.get(url, headers=headers, params=params)
+              
+              # Handle rate limiting
+              if response.status_code == 403 and 'rate limit exceeded' in response.text:
+                  reset_time = int(response.headers.get('X-RateLimit-Reset', 0))
+                  wait_time = reset_time - int(time.time()) + 10
+                  print(f"Rate limit exceeded. Waiting {wait_time} seconds...")
+                  time.sleep(wait_time)
+                  return github_api_request(endpoint, params)  # Retry
+              
+              response.raise_for_status()
+              return response.json()
+
+          def check_rate_limit():
+              url = "https://api.github.com/rate_limit"
+              headers = {'Authorization': f'token {github_token}'}
+              response = requests.get(url, headers=headers)
+              data = response.json()
+              return {
+                  'limit': data['rate']['limit'],
+                  'remaining': data['rate']['remaining'],
+                  'reset': data['rate']['reset']
+              }
+
+          def get_org_data(org_name):
+              try:
+                  # Get basic organization info
+                  org_data = github_api_request(f"/orgs/{org_name}")
+                  
+                  # Get repositories
+                  repos = []
+                  page = 1
+                  while True:
+                      repos_page = github_api_request(f"/orgs/{org_name}/repos", {'per_page': 100, 'page': page})
+                      if not repos_page:
+                          break
+                      repos.extend(repos_page)
+                      if len(repos_page) < 100:
+                          break
+                      page += 1
+                      time.sleep(1)  # Be nice to the API
+                  
+                  # Calculate metrics
+                  repo_count = len(repos)
+                  stars_total = sum(repo['stargazers_count'] for repo in repos)
+                  open_issues_total = sum(repo['open_issues_count'] for repo in repos)
+                  
+                  # Get languages
+                  languages = {}
+                  for repo in repos[:5]:  # Just check top 5 repos to save API calls
+                      repo_langs = github_api_request(f"/repos/{org_name}/{repo['name']}/languages")
+                      for lang, bytes_count in repo_langs.items():
+                          languages[lang] = languages.get(lang, 0) + bytes_count
+                  
+                  # Sort languages by usage
+                  primary_languages = sorted(languages.keys(), key=lambda x: languages[x], reverse=True)[:5]
+                  
+                  # Count good first issues
+                  good_first_issues = 0
+                  for repo in repos[:10]:  # Check top 10 repos
+                      try:
+                          issues = github_api_request(f"/repos/{org_name}/{repo['name']}/issues", 
+                                                    {'labels': 'good-first-issue,good first issue,beginner,easy', 'state': 'open'})
+                          good_first_issues += len(issues)
+                      except:
+                          pass  # Skip if this fails
+                  
+                  return {
+                      'repo_count': repo_count,
+                      'stars_total': stars_total,
+                      'open_issues_count': open_issues_total,
+                      'good_first_issues_count': good_first_issues,
+                      'primary_languages': primary_languages,
+                      'description': org_data.get('description', '')
+                  }
+              except Exception as e:
+                  print(f"Error getting data for {org_name}: {str(e)}")
+                  return None
+
+          # Main execution
+          print("Starting organization data enrichment...")
+
+          # Get all organizations from sheet
+          all_rows = orgs_sheet.get_all_values()
+          header = all_rows[0]
+          rows = all_rows[1:]
+
+          # Find column indices
+          github_org_idx = header.index('github_org') if 'github_org' in header else 2
+          repo_count_idx = header.index('repo_count') if 'repo_count' in header else 10
+          stars_total_idx = header.index('stars_total') if 'stars_total' in header else 11
+          open_issues_idx = header.index('open_issues_count') if 'open_issues_count' in header else 12
+          good_first_idx = header.index('good_first_issues_count') if 'good_first_issues_count' in header else 13
+          primary_langs_idx = header.index('primary_languages') if 'primary_languages' in header else 6
+          description_idx = header.index('description') if 'description' in header else 4
+          last_updated_idx = header.index('last_updated') if 'last_updated' in header else 15
+
+          # Process organizations with GitHub usernames
+          updated_count = 0
+          for i, row in enumerate(rows):
+              github_org = row[github_org_idx].strip()
+              if github_org:
+                  print(f"Processing {github_org}...")
+                  
+                  # Skip if already has data and not too old
+                  if (row[repo_count_idx] and row[stars_total_idx] and 
+                      row[last_updated_idx] and 
+                      (datetime.now() - datetime.strptime(row[last_updated_idx].split()[0], '%Y-%m-%d')).days < 30):
+                      print(f"Skipping {github_org} - data is recent")
+                      continue
+                  
+                  # Get data from GitHub
+                  org_data = get_org_data(github_org)
+                  if org_data:
+                      # Update row in sheet
+                      row_num = i + 2  # +1 for 0-index, +1 for header
+                      
+                      # Update repo count
+                      if org_data['repo_count']:
+                          orgs_sheet.update_cell(row_num, repo_count_idx + 1, org_data['repo_count'])
+                      
+                      # Update stars
+                      if org_data['stars_total']:
+                          orgs_sheet.update_cell(row_num, stars_total_idx + 1, org_data['stars_total'])
+                      
+                      # Update open issues
+                      if org_data['open_issues_count']:
+                          orgs_sheet.update_cell(row_num, open_issues_idx + 1, org_data['open_issues_count'])
+                      
+                      # Update good first issues
+                      if org_data['good_first_issues_count'] is not None:
+                          orgs_sheet.update_cell(row_num, good_first_idx + 1, org_data['good_first_issues_count'])
+                      
+                      # Update primary languages
+                      if org_data['primary_languages']:
+                          orgs_sheet.update_cell(row_num, primary_langs_idx + 1, ','.join(org_data['primary_languages']))
+                      
+                      # Update description if empty
+                      if org_data['description'] and not row[description_idx]:
+                          orgs_sheet.update_cell(row_num, description_idx + 1, org_data['description'])
+                      
+                      # Update last updated timestamp
+                      orgs_sheet.update_cell(row_num, last_updated_idx + 1, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                      
+                      updated_count += 1
+                      print(f"Updated {github_org}")
+                      
+                      # Be nice to both APIs
+                      time.sleep(2)
+                  
+                  # Check if we're approaching rate limit
+                  rate_limit = check_rate_limit()
+                  if rate_limit['remaining'] < 100:
+                      print(f"Approaching rate limit ({rate_limit['remaining']} remaining). Stopping for now.")
+                      break
+
+          # Update config
+          config_sheet.update('B2', datetime.now().strftime('%Y-%m-%d'))
+          print(f"Enrichment complete! Updated {updated_count} organizations.")
+          EOF
+          
+          python enrich_org_data.py
+      
+      - name: Clean up
+        run: |
+          rm service_account.json
+          rm enrich_org_data.py
