@@ -1,0 +1,228 @@
+name: Collect GSoC Historical Organizations
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+  schedule:
+    - cron: '0 0 1 * *'  # Run monthly on the 1st
+
+jobs:
+  collect-history:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 pandas gspread oauth2client
+      
+      - name: Create service account key file
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}' > service_account.json
+      
+      - name: Collect GSoC historical data
+        run: |
+          cat > collect_gsoc_history.py << 'EOF'
+          import requests
+          import json
+          import re
+          import time
+          from bs4 import BeautifulSoup
+          import pandas as pd
+          import gspread
+          from oauth2client.service_account import ServiceAccountCredentials
+          from datetime import datetime
+
+          # Configure Google Sheets API
+          scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+          credentials = ServiceAccountCredentials.from_json_keyfile_name('service_account.json', scope)
+          gc = gspread.authorize(credentials)
+
+          # Open the spreadsheet - use your existing sheet ID
+          spreadsheet = gc.open_by_key('19PfXdNw--raP07c3tLzOBYcAC44-AfPeM-nxI8t4cKA')
+          years_sheet = spreadsheet.worksheet('GSoC_Years')
+          orgs_sheet = spreadsheet.worksheet('Organizations')
+
+          # Historical GSoC archive URLs
+          gsoc_archives = {
+              2016: 'https://summerofcode.withgoogle.com/archive/2016/organizations/',
+              2017: 'https://summerofcode.withgoogle.com/archive/2017/organizations/',
+              2018: 'https://summerofcode.withgoogle.com/archive/2018/organizations/',
+              2019: 'https://summerofcode.withgoogle.com/archive/2019/organizations/',
+              2020: 'https://summerofcode.withgoogle.com/archive/2020/organizations/',
+              2021: 'https://summerofcode.withgoogle.com/archive/2021/organizations/',
+              2022: 'https://summerofcode.withgoogle.com/archive/2022/organizations/',
+              2023: 'https://summerofcode.withgoogle.com/archive/2023/organizations/',
+              2024: 'https://summerofcode.withgoogle.com/programs/2024/organizations'
+          }
+
+          # Function to extract GitHub organization from URL
+          def extract_github_org(url):
+              if not url or 'github.com' not in url:
+                  return None
+              
+              # Try to extract org name from GitHub URL
+              github_pattern = r'github\.com/([^/]+)/?'
+              match = re.search(github_pattern, url)
+              if match:
+                  return match.group(1)
+              return None
+
+          # Function to scrape organizations from a GSoC archive page
+          def scrape_gsoc_orgs(year, url):
+              print(f"Scraping organizations for GSoC {year}...")
+              
+              try:
+                  response = requests.get(url)
+                  response.raise_for_status()
+                  
+                  soup = BeautifulSoup(response.text, 'html.parser')
+                  orgs = []
+                  
+                  # Different scraping logic based on year (different page structures)
+                  if year >= 2023:
+                      # 2023-2024 format
+                      org_cards = soup.select('.organization-card')
+                      for card in org_cards:
+                          name_elem = card.select_one('.organization-card__name')
+                          name = name_elem.text.strip() if name_elem else "Unknown"
+                          
+                          link_elem = card.select_one('a')
+                          org_url = link_elem['href'] if link_elem and 'href' in link_elem.attrs else None
+                          
+                          # Get full org details from the org page
+                          if org_url and not org_url.startswith('http'):
+                              org_url = f"https://summerofcode.withgoogle.com{org_url}"
+                          
+                          orgs.append({
+                              'name': name,
+                              'website': org_url,
+                              'github_org': None,  # Will try to find later
+                              'description': None,
+                              'gsoc_years': [str(year)]
+                          })
+                  else:
+                      # 2016-2022 format
+                      org_cards = soup.select('.organization-card')
+                      for card in org_cards:
+                          name_elem = card.select_one('.organization-card__name')
+                          name = name_elem.text.strip() if name_elem else "Unknown"
+                          
+                          desc_elem = card.select_one('.organization-card__tagline')
+                          description = desc_elem.text.strip() if desc_elem else None
+                          
+                          link_elem = card.select_one('a')
+                          org_url = link_elem['href'] if link_elem and 'href' in link_elem.attrs else None
+                          
+                          orgs.append({
+                              'name': name,
+                              'website': org_url,
+                              'github_org': None,
+                              'description': description,
+                              'gsoc_years': [str(year)]
+                          })
+                  
+                  print(f"Found {len(orgs)} organizations for {year}")
+                  return orgs, len(orgs)
+              
+              except Exception as e:
+                  print(f"Error scraping {year}: {str(e)}")
+                  return [], 0
+
+          # Main execution
+          all_orgs = {}  # Dictionary to track unique organizations
+
+          # Update GSoC_Years sheet with years data
+          years_data = []
+          for year, url in gsoc_archives.items():
+              orgs, count = scrape_gsoc_orgs(year, url)
+              
+              # Add to years sheet data
+              years_data.append([year, count, url, datetime.now().strftime('%Y-%m-%d')])
+              
+              # Process organizations
+              for org in orgs:
+                  name = org['name']
+                  
+                  # Try to extract GitHub org from website if available
+                  if org['website'] and not org['github_org']:
+                      org['github_org'] = extract_github_org(org['website'])
+                  
+                  # If we've seen this org before, update its GSoC years
+                  if name in all_orgs:
+                      if str(year) not in all_orgs[name]['gsoc_years']:
+                          all_orgs[name]['gsoc_years'].append(str(year))
+                  else:
+                      all_orgs[name] = org
+              
+              # Be nice to the server
+              time.sleep(2)
+
+          # Update GSoC_Years sheet
+          # Clear existing data except header
+          years_sheet.resize(rows=1)
+          # Append new data
+          if years_data:
+              years_sheet.append_rows(years_data)
+              print(f"Updated GSoC_Years sheet with {len(years_data)} years")
+
+          # Prepare organizations data for sheet
+          orgs_data = []
+          for name, org in all_orgs.items():
+              orgs_data.append([
+                  f"ORG{len(orgs_data)+1}",  # Simple org_id
+                  name,
+                  org['github_org'] or '',
+                  org['website'] or '',
+                  org['description'] or '',
+                  ','.join(org['gsoc_years']),
+                  '',  # primary_languages
+                  '',  # categories
+                  '',  # communication_channels
+                  '',  # contribution_guidelines
+                  '',  # repo_count
+                  '',  # stars_total
+                  '',  # open_issues_count
+                  '',  # good_first_issues_count
+                  '',  # avg_issue_resolution_days
+                  datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # last_updated
+              ])
+
+          # Get existing organizations
+          existing_orgs = orgs_sheet.get_all_values()
+          existing_names = set()
+          if len(existing_orgs) > 1:  # If we have data beyond the header
+              for row in existing_orgs[1:]:  # Skip header
+                  if len(row) > 1:  # Ensure row has name column
+                      existing_names.add(row[1])  # Name is in column B (index 1)
+
+          # Filter to only add new organizations
+          new_orgs_data = [row for row in orgs_data if row[1] not in existing_names]
+
+          # Append new organizations
+          if new_orgs_data:
+              orgs_sheet.append_rows(new_orgs_data)
+              print(f"Added {len(new_orgs_data)} new organizations to the sheet")
+          else:
+              print("No new organizations to add")
+
+          # Update config
+          config_sheet = spreadsheet.worksheet('Config')
+          config_sheet.update('B2', datetime.now().strftime('%Y-%m-%d'))
+          print("Updated last_full_update in Config sheet")
+
+          print("GSoC historical data collection complete!")
+          EOF
+          
+          python collect_gsoc_history.py
+      
+      - name: Clean up
+        run: |
+          rm service_account.json
+          rm collect_gsoc_history.py
