@@ -1,0 +1,228 @@
+name: Sync to Supabase
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  sync-data:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pandas gspread oauth2client supabase
+      
+      - name: Create service account key file
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}' > service_account_raw.json
+          cat service_account_raw.json > service_account.json
+      
+      - name: Sync data to Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          cat > sync_to_supabase.py << 'EOF'
+          import json
+          import pandas as pd
+          import gspread
+          from oauth2client.service_account import ServiceAccountCredentials
+          from datetime import datetime
+          import os
+          from supabase import create_client, Client
+
+          # Get Supabase credentials from environment
+          supabase_url = os.environ.get('SUPABASE_URL')
+          supabase_key = os.environ.get('SUPABASE_KEY')
+          
+          if not supabase_url or not supabase_key:
+              raise ValueError("Supabase credentials not set in environment variables")
+
+          # Initialize Supabase client
+          supabase: Client = create_client(supabase_url, supabase_key)
+
+          # Configure Google Sheets API
+          scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+          credentials = ServiceAccountCredentials.from_json_keyfile_name('service_account.json', scope)
+          gc = gspread.authorize(credentials)
+
+          # Open the spreadsheet - use your existing sheet ID
+          spreadsheet = gc.open_by_key('19PfXdNw--raP07c3tLzOBYcAC44-AfPeM-nxI8t4cKA')
+          
+          print("Syncing Organizations...")
+          
+          # Get organizations data
+          orgs_sheet = spreadsheet.worksheet('Organizations')
+          orgs_data = orgs_sheet.get_all_records()
+          
+          # Process each organization
+          for org in orgs_data:
+              # Convert string lists to arrays
+              if 'gsoc_years' in org and org['gsoc_years']:
+                  org['gsoc_years'] = org['gsoc_years'].split(',')
+              else:
+                  org['gsoc_years'] = []
+                  
+              if 'primary_languages' in org and org['primary_languages']:
+                  org['primary_languages'] = org['primary_languages'].split(',')
+              else:
+                  org['primary_languages'] = []
+                  
+              if 'categories' in org and org['categories']:
+                  org['categories'] = org['categories'].split(',')
+              else:
+                  org['categories'] = []
+                  
+              # Convert empty strings to null
+              for key, value in org.items():
+                  if value == '':
+                      org[key] = None
+                      
+              # Convert numeric fields
+              for field in ['repo_count', 'stars_total', 'open_issues_count', 'good_first_issues_count']:
+                  if field in org and org[field]:
+                      try:
+                          org[field] = int(org[field])
+                      except:
+                          org[field] = None
+                          
+              if 'avg_issue_resolution_days' in org and org['avg_issue_resolution_days']:
+                  try:
+                      org['avg_issue_resolution_days'] = float(org['avg_issue_resolution_days'])
+                  except:
+                      org['avg_issue_resolution_days'] = None
+                      
+              # Convert communication_channels to JSON
+              if 'communication_channels' in org and org['communication_channels']:
+                  try:
+                      org['communication_channels'] = json.loads(org['communication_channels'])
+                  except:
+                      # If not valid JSON, create a simple object
+                      org['communication_channels'] = {"note": org['communication_channels']}
+              else:
+                  org['communication_channels'] = {}
+                  
+              # Upsert to Supabase
+              try:
+                  # Check if org exists by github_org
+                  if org['github_org']:
+                      existing = supabase.table('organizations').select('org_id').eq('github_org', org['github_org']).execute()
+                      
+                      if existing.data and len(existing.data) > 0:
+                          # Update existing record
+                          org_id = existing.data[0]['org_id']
+                          supabase.table('organizations').update(org).eq('org_id', org_id).execute()
+                          print(f"Updated organization: {org['name']}")
+                      else:
+                          # Insert new record
+                          supabase.table('organizations').insert(org).execute()
+                          print(f"Inserted organization: {org['name']}")
+                  else:
+                      # Check by name if github_org is not available
+                      existing = supabase.table('organizations').select('org_id').eq('name', org['name']).execute()
+                      
+                      if existing.data and len(existing.data) > 0:
+                          # Update existing record
+                          org_id = existing.data[0]['org_id']
+                          supabase.table('organizations').update(org).eq('org_id', org_id).execute()
+                          print(f"Updated organization by name: {org['name']}")
+                      else:
+                          # Insert new record
+                          supabase.table('organizations').insert(org).execute()
+                          print(f"Inserted organization by name: {org['name']}")
+              except Exception as e:
+                  print(f"Error syncing organization {org.get('name', 'unknown')}: {str(e)}")
+          
+          print("Syncing GSoC Years...")
+          
+          # Get years data
+          years_sheet = spreadsheet.worksheet('GSoC_Years')
+          years_data = years_sheet.get_all_records()
+          
+          # Process each year
+          for year_data in years_data:
+              # Convert empty strings to null
+              for key, value in year_data.items():
+                  if value == '':
+                      year_data[key] = None
+                      
+              # Convert numeric fields
+              if 'year' in year_data and year_data['year']:
+                  try:
+                      year_data['year'] = int(year_data['year'])
+                  except:
+                      continue  # Skip if year is not a valid integer
+                      
+              if 'org_count' in year_data and year_data['org_count']:
+                  try:
+                      year_data['org_count'] = int(year_data['org_count'])
+                  except:
+                      year_data['org_count'] = None
+                      
+              # Upsert to Supabase
+              try:
+                  # Check if year exists
+                  existing = supabase.table('gsoc_years').select('year').eq('year', year_data['year']).execute()
+                  
+                  if existing.data and len(existing.data) > 0:
+                      # Update existing record
+                      supabase.table('gsoc_years').update(year_data).eq('year', year_data['year']).execute()
+                      print(f"Updated year: {year_data['year']}")
+                  else:
+                      # Insert new record
+                      supabase.table('gsoc_years').insert(year_data).execute()
+                      print(f"Inserted year: {year_data['year']}")
+              except Exception as e:
+                  print(f"Error syncing year {year_data.get('year', 'unknown')}: {str(e)}")
+          
+          print("Syncing Config...")
+          
+          # Get config data
+          config_sheet = spreadsheet.worksheet('Config')
+          config_data = config_sheet.get_all_records()
+          
+          # Process each config item
+          for config_item in config_data:
+              if 'config_key' not in config_item or not config_item['config_key']:
+                  continue
+                  
+              # Upsert to Supabase
+              try:
+                  # Check if config exists
+                  existing = supabase.table('config').select('config_key').eq('config_key', config_item['config_key']).execute()
+                  
+                  if existing.data and len(existing.data) > 0:
+                      # Update existing record
+                      supabase.table('config').update({
+                          'value': config_item.get('value', None),
+                          'updated_at': datetime.now().isoformat()
+                      }).eq('config_key', config_item['config_key']).execute()
+                      print(f"Updated config: {config_item['config_key']}")
+                  else:
+                      # Insert new record
+                      supabase.table('config').insert({
+                          'config_key': config_item['config_key'],
+                          'value': config_item.get('value', None),
+                          'updated_at': datetime.now().isoformat()
+                      }).execute()
+                      print(f"Inserted config: {config_item['config_key']}")
+              except Exception as e:
+                  print(f"Error syncing config {config_item.get('config_key', 'unknown')}: {str(e)}")
+          
+          print("Sync to Supabase complete!")
+          EOF
+          
+          python sync_to_supabase.py
+      
+      - name: Clean up
+        run: |
+          rm service_account.json
+          rm sync_to_supabase.py
