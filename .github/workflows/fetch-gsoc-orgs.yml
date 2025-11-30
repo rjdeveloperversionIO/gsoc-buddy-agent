@@ -1,0 +1,54 @@
+name: Fetch GSoC Organizations
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+  schedule:
+    - cron: '0 0 * * 1'  # Run weekly on Monday at midnight
+
+jobs:
+  fetch-orgs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Make API script executable
+        run: chmod +x ./scripts/github-api.sh
+      
+      - name: Fetch sample GSoC organizations
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
+        run: |
+          echo "Fetching sample GSoC organizations..."
+          
+          # Create data directory if it doesn't exist
+          mkdir -p data
+          
+          # Sample list of known GSoC organizations (we'll expand this later)
+          ORGS=("zulip" "tensorflow" "kubernetes" "mozilla" "wikimedia")
+          
+          # Fetch each organization's data
+          for org in "${ORGS[@]}"; do
+            echo "Fetching data for $org..."
+            ./scripts/github-api.sh "/orgs/$org" > "data/$org-info.json"
+            
+            # Fetch repositories for this organization
+            ./scripts/github-api.sh "/orgs/$org/repos?per_page=5" > "data/$org-repos.json"
+            
+            # For the first repo, fetch some issues
+            FIRST_REPO=$(cat "data/$org-repos.json" | jq -r '.[0].name')
+            if [ ! -z "$FIRST_REPO" ]; then
+              echo "Fetching issues for $org/$FIRST_REPO..."
+              ./scripts/github-api.sh "/repos/$org/$FIRST_REPO/issues?state=open&per_page=5" > "data/$org-$FIRST_REPO-issues.json"
+            fi
+          done
+          
+          echo "✅ Fetched data for ${#ORGS[@]} organizations"
+      
+      - name: Commit and push data
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/
+          git commit -m "Update GSoC organization data" || echo "No changes to commit"
+          git push
