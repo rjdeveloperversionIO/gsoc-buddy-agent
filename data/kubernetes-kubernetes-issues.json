@@ -1,54 +1,108 @@
 [
   {
-    "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135519",
+    "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135526",
     "repository_url": "https://api.github.com/repos/kubernetes/kubernetes",
-    "labels_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135519/labels{/name}",
-    "comments_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135519/comments",
-    "events_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135519/events",
-    "html_url": "https://github.com/kubernetes/kubernetes/issues/135519",
-    "id": 3677548210,
-    "node_id": "I_kwDOAToIks7bMu6y",
-    "number": 135519,
-    "title": "`EnvFiles` feature (KEP-3721): Unclear quote handling behavior",
+    "labels_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135526/labels{/name}",
+    "comments_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135526/comments",
+    "events_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135526/events",
+    "html_url": "https://github.com/kubernetes/kubernetes/pull/135526",
+    "id": 3678610799,
+    "node_id": "PR_kwDOAToIks62OCfn",
+    "number": 135526,
+    "title": "[WIP] debug mounter issue",
     "user": {
-      "login": "kfess",
-      "id": 35001425,
-      "node_id": "MDQ6VXNlcjM1MDAxNDI1",
-      "avatar_url": "https://avatars.githubusercontent.com/u/35001425?v=4",
+      "login": "dims",
+      "id": 23304,
+      "node_id": "MDQ6VXNlcjIzMzA0",
+      "avatar_url": "https://avatars.githubusercontent.com/u/23304?v=4",
       "gravatar_id": "",
-      "url": "https://api.github.com/users/kfess",
-      "html_url": "https://github.com/kfess",
-      "followers_url": "https://api.github.com/users/kfess/followers",
-      "following_url": "https://api.github.com/users/kfess/following{/other_user}",
-      "gists_url": "https://api.github.com/users/kfess/gists{/gist_id}",
-      "starred_url": "https://api.github.com/users/kfess/starred{/owner}{/repo}",
-      "subscriptions_url": "https://api.github.com/users/kfess/subscriptions",
-      "organizations_url": "https://api.github.com/users/kfess/orgs",
-      "repos_url": "https://api.github.com/users/kfess/repos",
-      "events_url": "https://api.github.com/users/kfess/events{/privacy}",
-      "received_events_url": "https://api.github.com/users/kfess/received_events",
+      "url": "https://api.github.com/users/dims",
+      "html_url": "https://github.com/dims",
+      "followers_url": "https://api.github.com/users/dims/followers",
+      "following_url": "https://api.github.com/users/dims/following{/other_user}",
+      "gists_url": "https://api.github.com/users/dims/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/dims/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/dims/subscriptions",
+      "organizations_url": "https://api.github.com/users/dims/orgs",
+      "repos_url": "https://api.github.com/users/dims/repos",
+      "events_url": "https://api.github.com/users/dims/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/dims/received_events",
       "type": "User",
       "user_view_type": "public",
       "site_admin": false
     },
     "labels": [
       {
-        "id": 105146071,
-        "node_id": "MDU6TGFiZWwxMDUxNDYwNzE=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/kind/bug",
-        "name": "kind/bug",
-        "color": "e11d21",
+        "id": 158907408,
+        "node_id": "MDU6TGFiZWwxNTg5MDc0MDg=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/area/provider/gcp",
+        "name": "area/provider/gcp",
+        "color": "0052cc",
         "default": false,
-        "description": "Categorizes issue or PR as related to a bug."
+        "description": "Issues or PRs related to gcp provider"
       },
       {
-        "id": 173493665,
-        "node_id": "MDU6TGFiZWwxNzM0OTM2NjU=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/node",
-        "name": "sig/node",
+        "id": 253450978,
+        "node_id": "MDU6TGFiZWwyNTM0NTA5Nzg=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/size/L",
+        "name": "size/L",
+        "color": "ee9900",
+        "default": false,
+        "description": "Denotes a PR that changes 100-499 lines, ignoring generated files."
+      },
+      {
+        "id": 414883982,
+        "node_id": "MDU6TGFiZWw0MTQ4ODM5ODI=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/approved",
+        "name": "approved",
+        "color": "0ffa16",
+        "default": false,
+        "description": "Indicates a PR has been approved by an approver from all required OWNERS files."
+      },
+      {
+        "id": 477397086,
+        "node_id": "MDU6TGFiZWw0NzczOTcwODY=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/cncf-cla:%20yes",
+        "name": "cncf-cla: yes",
+        "color": "bfe5bf",
+        "default": false,
+        "description": "Indicates the PR's author has signed the CNCF CLA."
+      },
+      {
+        "id": 680152113,
+        "node_id": "MDU6TGFiZWw2ODAxNTIxMTM=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/do-not-merge/release-note-label-needed",
+        "name": "do-not-merge/release-note-label-needed",
+        "color": "e11d21",
+        "default": false,
+        "description": "Indicates that a PR should not merge because it's missing one of the release note labels."
+      },
+      {
+        "id": 687500047,
+        "node_id": "MDU6TGFiZWw2ODc1MDAwNDc=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/do-not-merge/work-in-progress",
+        "name": "do-not-merge/work-in-progress",
+        "color": "e11d21",
+        "default": false,
+        "description": "Indicates that a PR should not merge because it is a work in progress."
+      },
+      {
+        "id": 958178286,
+        "node_id": "MDU6TGFiZWw5NTgxNzgyODY=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/cloud-provider",
+        "name": "sig/cloud-provider",
         "color": "d2b48c",
         "default": false,
-        "description": "Categorizes an issue or PR as relevant to SIG Node."
+        "description": "Categorizes an issue or PR as relevant to SIG Cloud Provider."
+      },
+      {
+        "id": 1111992057,
+        "node_id": "MDU6TGFiZWwxMTExOTkyMDU3",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/needs-priority",
+        "name": "needs-priority",
+        "color": "ededed",
+        "default": false,
+        "description": "Indicates a PR lacks a `priority/foo` label and requires one."
       },
       {
         "id": 2389815605,
@@ -58,6 +112,15 @@
         "color": "ededed",
         "default": false,
         "description": "Indicates an issue or PR lacks a `triage/foo` label and requires one."
+      },
+      {
+        "id": 2480789134,
+        "node_id": "MDU6TGFiZWwyNDgwNzg5MTM0",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/do-not-merge/needs-kind",
+        "name": "do-not-merge/needs-kind",
+        "color": "e11d21",
+        "default": false,
+        "description": "Indicates a PR lacks a `kind/foo` label and requires one."
       }
     ],
     "state": "open",
@@ -67,28 +130,25 @@
 
     ],
     "milestone": null,
-    "comments": 2,
-    "created_at": "2025-11-30T09:07:41Z",
-    "updated_at": "2025-11-30T09:09:59Z",
+    "comments": 5,
+    "created_at": "2025-11-30T23:32:15Z",
+    "updated_at": "2025-12-01T00:41:35Z",
     "closed_at": null,
     "author_association": "MEMBER",
     "type": null,
     "active_lock_reason": null,
-    "sub_issues_summary": {
-      "total": 0,
-      "completed": 0,
-      "percent_completed": 0
+    "draft": false,
+    "pull_request": {
+      "url": "https://api.github.com/repos/kubernetes/kubernetes/pulls/135526",
+      "html_url": "https://github.com/kubernetes/kubernetes/pull/135526",
+      "diff_url": "https://github.com/kubernetes/kubernetes/pull/135526.diff",
+      "patch_url": "https://github.com/kubernetes/kubernetes/pull/135526.patch",
+      "merged_at": null
     },
-    "issue_dependencies_summary": {
-      "blocked_by": 0,
-      "total_blocked_by": 0,
-      "blocking": 0,
-      "total_blocking": 0
-    },
-    "body": "### What happened?\n\nI'm interested in and testing the EnvFiles feature ([KEP-3721](https://github.com/kubernetes/enhancements/blob/master/keps/sig-node/3721-support-for-env-files/README.md)) and found that quote handling behavior is unclear and inconsistent with how ConfigMap handles quotes.\n\nI may be misunderstanding something,\nbut I expected consistent quote handling behavior, similar to how ConfigMap works.\n\n**Current behavior with EnvFiles:**\n\nWhen using FileKeyRef with an env file containing:\n```bash\nSIMPLE=value\nAPI_TOKEN='abc123'\nDB_HOST=\"localhost\"\nJSON_DATA='{\"key\": \"value\"}'\n```\n\nThe resulting environment variables include the quotes as literal characters:\n```bash\nSIMPLE=value                 # No quotes\nAPI_TOKEN='abc123'           # Quotes preserved\nDB_HOST=\"localhost\"          # Quotes preserved  \nJSON_DATA='{\"key\": \"value\"}' # Quotes preserved\n```\n\n**Comparison with ConfigMap:**\n\nFor reference, ConfigMap strips YAML quotes:\n```yaml\ndata:\n  API_TOKEN: \"'abc123'\"\n  DB_HOST: \"localhost\"\n  JSON_DATA: '{\"key\": \"value\"}'\n  SIMPLE=value\n```\n\nResults in:\n```bash\nAPI_TOKEN='abc123'           # YAML outer quotes removed\nDB_HOST=localhost            # YAML quotes removed\nJSON_DATA={\"key\": \"value\"}   # YAML quotes removed\nSIMPLE=value\n```\n\n**Documentation inconsistencies:**\n\n1. KEP states: \"[Values must be enclosed in single quotes (e.g., VAR='value').](https://github.com/kubernetes/enhancements/blob/master/keps/sig-node/3721-support-for-env-files/README.md#env-file)\".\n2. KEP also states: \"[Any env file supported by k8s will yield the same environment variables as if it was interpreted by bash.](https://github.com/kubernetes/enhancements/blob/master/keps/sig-node/3721-support-for-env-files/README.md#env-file)\"\n3. [Official blog post](https://kubernetes.io/blog/2025/09/10/kubernetes-v1-34-env-files/#how-it-works) shows examples **without** quotes: `echo \"CONFIG_VAR=HELLO\" > /config/config.env`\n4. Test cases only cover values `without` quotes\n\n### What did you expect to happen?\n\nI expected consistent quote handling behavior, similar to how ConfigMap works.\nI want to know this difference is intentional or not.\n\nConfigMap strips quotes, but EnvFiles preserves them. For example:\n```yaml\n# ConfigMap\ndata:\n  TOKEN: 'abc123'\n# Result: TOKEN=abc123 (quotes removed)\n```\n```bash\n# EnvFiles\nTOKEN='abc123'\n# Result: TOKEN='abc123' (quotes preserved)\n```\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\n1. Create a test pod with EnvFiles:\n\n```yaml\napiVersion: v1\nkind: Pod\nmetadata:\n  name: envfiles-test\nspec:\n  initContainers:\n  - name: setup\n    image: busybox\n    command: \n      - sh\n      - -c\n      - |\n        cat > /data/config.env << 'EOF'\n        API_TOKEN='abc123'\n        DB_HOST=\"localhost\"\n        SIMPLE=value\n        JSON='{\"key\": \"value\"}'\n        EOF\n    volumeMounts:\n    - name: config\n      mountPath: /data\n  containers:\n  - name: test\n    image: busybox\n    command: [\"sh\", \"-c\", \"sleep 3600\"]\n    env:\n    - name: API_TOKEN\n      valueFrom:\n        fileKeyRef:\n          path: config.env\n          volumeName: config\n          key: API_TOKEN\n    - name: DB_HOST\n      valueFrom:\n        fileKeyRef:\n          path: config.env\n          volumeName: config\n          key: DB_HOST\n    - name: SIMPLE\n      valueFrom:\n        fileKeyRef:\n          path: config.env\n          volumeName: config\n          key: SIMPLE\n    - name: JSON\n      valueFrom:\n        fileKeyRef:\n          path: config.env\n          volumeName: config\n          key: JSON\n  volumes:\n  - name: config\n    emptyDir: {}\n```\n\n2. Check environment variables:\n```bash\nkubectl exec envfiles-test -- sh -c 'printf \"API_TOKEN=[%s]\\n\" \"$API_TOKEN\"'\nkubectl exec envfiles-test -- sh -c 'printf \"DB_HOST=[%s]\\n\" \"$DB_HOST\"'\nkubectl exec envfiles-test -- sh -c 'printf \"SIMPLE=[%s]\\n\" \"$SIMPLE\"'\nkubectl exec envfiles-test -- sh -c 'printf \"JSON=[%s]\\n\" \"$JSON\"'\n```\n\n3. Observe that quotes are preserved in the values\n```bash\nAPI_TOKEN=['abc123']\nDB_HOST=[\"localhost\"]\nSIMPLE=[value]\nJSON=['{\"key\": \"value\"}']\n```\n\n### Anything else we need to know?\n\n_No response_\n\n### Kubernetes version\n\n<details>\n\n```console\n$ kubectl version\nv1.34.0 (with EnvFiles feature gate enabled)\n```\n\n</details>\n\n\n### Cloud provider\n\n<details>\nkind\n</details>\n\n\n### OS version\n\n<details>\n\n```console\n# On Linux:\n$ cat /etc/os-release\n# paste output here\n$ uname -a\n# paste output here\n\n# On Windows:\nC:\\> wmic os get Caption, Version, BuildNumber, OSArchitecture\n# paste output here\n```\n\n</details>\n\n\n### Install tools\n\n<details>\n\n</details>\n\n\n### Container runtime (CRI) and version (if applicable)\n\n<details>\n\n</details>\n\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\n<details>\n\n</details>\n",
+    "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\n\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
     "closed_by": null,
     "reactions": {
-      "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135519/reactions",
+      "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135526/reactions",
       "total_count": 0,
       "+1": 0,
       "-1": 0,
@@ -99,52 +159,43 @@
       "rocket": 0,
       "eyes": 0
     },
-    "timeline_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135519/timeline",
+    "timeline_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135526/timeline",
     "performed_via_github_app": null,
     "state_reason": null
   },
   {
-    "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135518",
+    "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135525",
     "repository_url": "https://api.github.com/repos/kubernetes/kubernetes",
-    "labels_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135518/labels{/name}",
-    "comments_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135518/comments",
-    "events_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135518/events",
-    "html_url": "https://github.com/kubernetes/kubernetes/issues/135518",
-    "id": 3677545557,
-    "node_id": "I_kwDOAToIks7bMuRV",
-    "number": 135518,
-    "title": "Limitation of more than 64 backend pods for a Single Service on Windows nodes needs to be removed from documentation",
+    "labels_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135525/labels{/name}",
+    "comments_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135525/comments",
+    "events_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135525/events",
+    "html_url": "https://github.com/kubernetes/kubernetes/issues/135525",
+    "id": 3678577658,
+    "node_id": "I_kwDOAToIks7bQqP6",
+    "number": 135525,
+    "title": "CVE-2025-13281: <place-holder>",
     "user": {
-      "login": "rabindra-harlalka",
-      "id": 8935231,
-      "node_id": "MDQ6VXNlcjg5MzUyMzE=",
-      "avatar_url": "https://avatars.githubusercontent.com/u/8935231?v=4",
+      "login": "natherz97",
+      "id": 55205932,
+      "node_id": "MDQ6VXNlcjU1MjA1OTMy",
+      "avatar_url": "https://avatars.githubusercontent.com/u/55205932?v=4",
       "gravatar_id": "",
-      "url": "https://api.github.com/users/rabindra-harlalka",
-      "html_url": "https://github.com/rabindra-harlalka",
-      "followers_url": "https://api.github.com/users/rabindra-harlalka/followers",
-      "following_url": "https://api.github.com/users/rabindra-harlalka/following{/other_user}",
-      "gists_url": "https://api.github.com/users/rabindra-harlalka/gists{/gist_id}",
-      "starred_url": "https://api.github.com/users/rabindra-harlalka/starred{/owner}{/repo}",
-      "subscriptions_url": "https://api.github.com/users/rabindra-harlalka/subscriptions",
-      "organizations_url": "https://api.github.com/users/rabindra-harlalka/orgs",
-      "repos_url": "https://api.github.com/users/rabindra-harlalka/repos",
-      "events_url": "https://api.github.com/users/rabindra-harlalka/events{/privacy}",
-      "received_events_url": "https://api.github.com/users/rabindra-harlalka/received_events",
+      "url": "https://api.github.com/users/natherz97",
+      "html_url": "https://github.com/natherz97",
+      "followers_url": "https://api.github.com/users/natherz97/followers",
+      "following_url": "https://api.github.com/users/natherz97/following{/other_user}",
+      "gists_url": "https://api.github.com/users/natherz97/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/natherz97/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/natherz97/subscriptions",
+      "organizations_url": "https://api.github.com/users/natherz97/orgs",
+      "repos_url": "https://api.github.com/users/natherz97/repos",
+      "events_url": "https://api.github.com/users/natherz97/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/natherz97/received_events",
       "type": "User",
       "user_view_type": "public",
       "site_admin": false
     },
     "labels": [
-      {
-        "id": 105146071,
-        "node_id": "MDU6TGFiZWwxMDUxNDYwNzE=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/kind/bug",
-        "name": "kind/bug",
-        "color": "e11d21",
-        "default": false,
-        "description": "Categorizes issue or PR as related to a bug."
-      },
       {
         "id": 617149945,
         "node_id": "MDU6TGFiZWw2MTcxNDk5NDU=",
@@ -172,8 +223,8 @@
     ],
     "milestone": null,
     "comments": 2,
-    "created_at": "2025-11-30T09:04:38Z",
-    "updated_at": "2025-11-30T09:04:47Z",
+    "created_at": "2025-11-30T23:08:37Z",
+    "updated_at": "2025-11-30T23:08:46Z",
     "closed_at": null,
     "author_association": "NONE",
     "type": null,
@@ -189,10 +240,10 @@
       "blocking": 0,
       "total_blocking": 0
     },
-    "body": "### What happened?\n\nhttps://kubernetes.io/docs/concepts/services-networking/windows-networking/#limitations states the following as one of the things _not_ supported:\n> More than 64 backend pods (or unique destination addresses) for a single Service\n\nThe original trigger for this documentation is https://github.com/kubernetes/kubernetes/issues/98680 apparently, which led to https://github.com/microsoft/Windows-Containers/issues/93. Comments in the latter issue say that the issue has been fixed with the limit increased to 1024. By now (3 years later), I believe the limitation has been fixed in Windows Server in both 2019 and 2022.\n\n### What did you expect to happen?\n\nIf the above is true, then can the limitation be removed from the documentation?\n\n### How can we reproduce it (as minimally and precisely as possible)?\n\nDocumentation needs update, no repro required.\n\n### Anything else we need to know?\n\nFWIW, in my test with an Azure Kubernetes Service (AKS) cluster and a Windows Server 2022 node pool, I created a StatefulSet with 70 Windows pods behind a ClusterIP Service - didn't observe any issue on any of the Windows nodes.\n\n### Kubernetes version\n\n<details>\n\n```console\n$ kubectl version\nClient Version: v1.29.7\nKustomize Version: v5.0.4-0.20230601165947-6ce0bf390ce3\nServer Version: v1.33.3\n```\n\n</details>\n\n\n### Cloud provider\n\n<details>\nAzure\n</details>\n\n\n### OS version\n\n<details>\n\n```console\n# On Linux:\n$ cat /etc/os-release\nPRETTY_NAME=\"Ubuntu 22.04.5 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"22.04\"\nVERSION=\"22.04.5 LTS (Jammy Jellyfish)\"\nVERSION_CODENAME=jammy\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=jammy\n$ uname -a\nLinux aks-default-58694455-vmss00000P 5.15.0-1098-azure #107-Ubuntu SMP Thu Oct 2 22:41:20 UTC 2025 x86_64 x86_64 x86_64 GNU/Linux\n\n# On Windows:\nC:\\> wmic os get Caption, Version, BuildNumber, OSArchitecture\nBuildNumber  Caption                                   OSArchitecture  Version\n20348        Microsoft Windows Server 2022 Datacenter  64-bit          10.0.20348\n```\n\n</details>\n\n\n### Install tools\n\n<details>\n\n</details>\n\n\n### Container runtime (CRI) and version (if applicable)\n\n<details>\n\n</details>\n\n\n### Related plugins (CNI, CSI, ...) and versions (if applicable)\n\n<details>\n\n</details>\n",
+    "body": null,
     "closed_by": null,
     "reactions": {
-      "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135518/reactions",
+      "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135525/reactions",
       "total_count": 0,
       "+1": 0,
       "-1": 0,
@@ -203,43 +254,115 @@
       "rocket": 0,
       "eyes": 0
     },
-    "timeline_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135518/timeline",
+    "timeline_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135525/timeline",
     "performed_via_github_app": null,
     "state_reason": null
   },
   {
-    "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135517",
+    "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135524",
     "repository_url": "https://api.github.com/repos/kubernetes/kubernetes",
-    "labels_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135517/labels{/name}",
-    "comments_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135517/comments",
-    "events_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135517/events",
-    "html_url": "https://github.com/kubernetes/kubernetes/pull/135517",
-    "id": 3677426398,
-    "node_id": "PR_kwDOAToIks62KMx_",
-    "number": 135517,
-    "title": "PV Controller: add configurable concurrent syncs for PersistentVolume controller",
+    "labels_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135524/labels{/name}",
+    "comments_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135524/comments",
+    "events_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135524/events",
+    "html_url": "https://github.com/kubernetes/kubernetes/pull/135524",
+    "id": 3678559462,
+    "node_id": "PR_kwDOAToIks62N3Wl",
+    "number": 135524,
+    "title": "Replace non-contextual API `utilruntime.HandleError` within the new context-aware version when possible",
     "user": {
-      "login": "xigang",
-      "id": 3377677,
-      "node_id": "MDQ6VXNlcjMzNzc2Nzc=",
-      "avatar_url": "https://avatars.githubusercontent.com/u/3377677?v=4",
+      "login": "nem0z",
+      "id": 107584609,
+      "node_id": "U_kgDOBmmcYQ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/107584609?v=4",
       "gravatar_id": "",
-      "url": "https://api.github.com/users/xigang",
-      "html_url": "https://github.com/xigang",
-      "followers_url": "https://api.github.com/users/xigang/followers",
-      "following_url": "https://api.github.com/users/xigang/following{/other_user}",
-      "gists_url": "https://api.github.com/users/xigang/gists{/gist_id}",
-      "starred_url": "https://api.github.com/users/xigang/starred{/owner}{/repo}",
-      "subscriptions_url": "https://api.github.com/users/xigang/subscriptions",
-      "organizations_url": "https://api.github.com/users/xigang/orgs",
-      "repos_url": "https://api.github.com/users/xigang/repos",
-      "events_url": "https://api.github.com/users/xigang/events{/privacy}",
-      "received_events_url": "https://api.github.com/users/xigang/received_events",
+      "url": "https://api.github.com/users/nem0z",
+      "html_url": "https://github.com/nem0z",
+      "followers_url": "https://api.github.com/users/nem0z/followers",
+      "following_url": "https://api.github.com/users/nem0z/following{/other_user}",
+      "gists_url": "https://api.github.com/users/nem0z/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/nem0z/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/nem0z/subscriptions",
+      "organizations_url": "https://api.github.com/users/nem0z/orgs",
+      "repos_url": "https://api.github.com/users/nem0z/repos",
+      "events_url": "https://api.github.com/users/nem0z/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/nem0z/received_events",
       "type": "User",
       "user_view_type": "public",
       "site_admin": false
     },
     "labels": [
+      {
+        "id": 105152717,
+        "node_id": "MDU6TGFiZWwxMDUxNTI3MTc=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/area/test",
+        "name": "area/test",
+        "color": "0052cc",
+        "default": false,
+        "description": null
+      },
+      {
+        "id": 116712108,
+        "node_id": "MDU6TGFiZWwxMTY3MTIxMDg=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/network",
+        "name": "sig/network",
+        "color": "d2b48c",
+        "default": false,
+        "description": "Categorizes an issue or PR as relevant to SIG Network."
+      },
+      {
+        "id": 116719829,
+        "node_id": "MDU6TGFiZWwxMTY3MTk4Mjk=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/area/kubelet",
+        "name": "area/kubelet",
+        "color": "0052cc",
+        "default": false,
+        "description": null
+      },
+      {
+        "id": 122775691,
+        "node_id": "MDU6TGFiZWwxMjI3NzU2OTE=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/kind/cleanup",
+        "name": "kind/cleanup",
+        "color": "c7def8",
+        "default": false,
+        "description": "Categorizes issue or PR as related to cleaning up code, process, or technical debt."
+      },
+      {
+        "id": 125550211,
+        "node_id": "MDU6TGFiZWwxMjU1NTAyMTE=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/scheduling",
+        "name": "sig/scheduling",
+        "color": "d2b48c",
+        "default": false,
+        "description": "Categorizes an issue or PR as relevant to SIG Scheduling."
+      },
+      {
+        "id": 136601536,
+        "node_id": "MDU6TGFiZWwxMzY2MDE1MzY=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/area/apiserver",
+        "name": "area/apiserver",
+        "color": "0052cc",
+        "default": false,
+        "description": null
+      },
+      {
+        "id": 138247961,
+        "node_id": "MDU6TGFiZWwxMzgyNDc5NjE=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/area/kubectl",
+        "name": "area/kubectl",
+        "color": "0052cc",
+        "default": false,
+        "description": null
+      },
+      {
+        "id": 154660912,
+        "node_id": "MDU6TGFiZWwxNTQ2NjA5MTI=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/area/cloudprovider",
+        "name": "area/cloudprovider",
+        "color": "0052cc",
+        "default": false,
+        "description": null
+      },
       {
         "id": 169428334,
         "node_id": "MDU6TGFiZWwxNjk0MjgzMzQ=",
@@ -248,6 +371,15 @@
         "color": "d2b48c",
         "default": false,
         "description": "Categorizes an issue or PR as relevant to SIG Storage."
+      },
+      {
+        "id": 173493665,
+        "node_id": "MDU6TGFiZWwxNzM0OTM2NjU=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/node",
+        "name": "sig/node",
+        "color": "d2b48c",
+        "default": false,
+        "description": "Categorizes an issue or PR as relevant to SIG Node."
       },
       {
         "id": 173493835,
@@ -259,168 +391,13 @@
         "description": "Categorizes an issue or PR as relevant to SIG API Machinery."
       },
       {
-        "id": 200149833,
-        "node_id": "MDU6TGFiZWwyMDAxNDk4MzM=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/release-note",
-        "name": "release-note",
-        "color": "c2e0c6",
-        "default": false,
-        "description": "Denotes a PR that will be considered when it comes time to generate release notes."
-      },
-      {
-        "id": 253450934,
-        "node_id": "MDU6TGFiZWwyNTM0NTA5MzQ=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/size/M",
-        "name": "size/M",
-        "color": "eebb00",
-        "default": false,
-        "description": "Denotes a PR that changes 30-99 lines, ignoring generated files."
-      },
-      {
-        "id": 261005360,
-        "node_id": "MDU6TGFiZWwyNjEwMDUzNjA=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/kind/api-change",
-        "name": "kind/api-change",
-        "color": "e11d21",
-        "default": false,
-        "description": "Categorizes issue or PR as related to adding, removing, or otherwise changing an API"
-      },
-      {
-        "id": 267761362,
-        "node_id": "MDU6TGFiZWwyNjc3NjEzNjI=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/kind/feature",
-        "name": "kind/feature",
-        "color": "c7def8",
-        "default": false,
-        "description": "Categorizes issue or PR as related to a new feature."
-      },
-      {
-        "id": 404091735,
-        "node_id": "MDU6TGFiZWw0MDQwOTE3MzU=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/apps",
-        "name": "sig/apps",
+        "id": 238245616,
+        "node_id": "MDU6TGFiZWwyMzgyNDU2MTY=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/autoscaling",
+        "name": "sig/autoscaling",
         "color": "d2b48c",
         "default": false,
-        "description": "Categorizes an issue or PR as relevant to SIG Apps."
-      },
-      {
-        "id": 477397086,
-        "node_id": "MDU6TGFiZWw0NzczOTcwODY=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/cncf-cla:%20yes",
-        "name": "cncf-cla: yes",
-        "color": "bfe5bf",
-        "default": false,
-        "description": "Indicates the PR's author has signed the CNCF CLA."
-      },
-      {
-        "id": 1086787260,
-        "node_id": "MDU6TGFiZWwxMDg2Nzg3MjYw",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/ok-to-test",
-        "name": "ok-to-test",
-        "color": "15dd18",
-        "default": false,
-        "description": "Indicates a non-member PR verified by an org member that is safe to test."
-      },
-      {
-        "id": 1111992057,
-        "node_id": "MDU6TGFiZWwxMTExOTkyMDU3",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/needs-priority",
-        "name": "needs-priority",
-        "color": "ededed",
-        "default": false,
-        "description": "Indicates a PR lacks a `priority/foo` label and requires one."
-      },
-      {
-        "id": 2389815605,
-        "node_id": "MDU6TGFiZWwyMzg5ODE1NjA1",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/needs-triage",
-        "name": "needs-triage",
-        "color": "ededed",
-        "default": false,
-        "description": "Indicates an issue or PR lacks a `triage/foo` label and requires one."
-      }
-    ],
-    "state": "open",
-    "locked": false,
-    "assignee": null,
-    "assignees": [
-
-    ],
-    "milestone": null,
-    "comments": 6,
-    "created_at": "2025-11-30T06:08:26Z",
-    "updated_at": "2025-11-30T08:59:17Z",
-    "closed_at": null,
-    "author_association": "MEMBER",
-    "type": null,
-    "active_lock_reason": null,
-    "draft": false,
-    "pull_request": {
-      "url": "https://api.github.com/repos/kubernetes/kubernetes/pulls/135517",
-      "html_url": "https://github.com/kubernetes/kubernetes/pull/135517",
-      "diff_url": "https://github.com/kubernetes/kubernetes/pull/135517.diff",
-      "patch_url": "https://github.com/kubernetes/kubernetes/pull/135517.patch",
-      "merged_at": null
-    },
-    "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n/kind feature\r\n\r\n#### What this PR does / why we need it:\r\n\r\nPreviously, the PV controller ran with a fixed number of workers (one volume worker and one claim worker). This change makes the worker count configurable so that operators can increase concurrency, improving controller responsiveness and reducing PVC binding latency introduced by the periodic (15s by default) resync of the volume and claim workqueues.\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nAdd --pvclaimbinder-concurrent-syncs flag to configure PV controller workers.\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
-    "closed_by": null,
-    "reactions": {
-      "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135517/reactions",
-      "total_count": 0,
-      "+1": 0,
-      "-1": 0,
-      "laugh": 0,
-      "hooray": 0,
-      "confused": 0,
-      "heart": 0,
-      "rocket": 0,
-      "eyes": 0
-    },
-    "timeline_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135517/timeline",
-    "performed_via_github_app": null,
-    "state_reason": null
-  },
-  {
-    "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135516",
-    "repository_url": "https://api.github.com/repos/kubernetes/kubernetes",
-    "labels_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135516/labels{/name}",
-    "comments_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135516/comments",
-    "events_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135516/events",
-    "html_url": "https://github.com/kubernetes/kubernetes/pull/135516",
-    "id": 3677407762,
-    "node_id": "PR_kwDOAToIks62KJhF",
-    "number": 135516,
-    "title": "Enable declarative validation for PriorityClass",
-    "user": {
-      "login": "vbottu",
-      "id": 19859827,
-      "node_id": "MDQ6VXNlcjE5ODU5ODI3",
-      "avatar_url": "https://avatars.githubusercontent.com/u/19859827?v=4",
-      "gravatar_id": "",
-      "url": "https://api.github.com/users/vbottu",
-      "html_url": "https://github.com/vbottu",
-      "followers_url": "https://api.github.com/users/vbottu/followers",
-      "following_url": "https://api.github.com/users/vbottu/following{/other_user}",
-      "gists_url": "https://api.github.com/users/vbottu/gists{/gist_id}",
-      "starred_url": "https://api.github.com/users/vbottu/starred{/owner}{/repo}",
-      "subscriptions_url": "https://api.github.com/users/vbottu/subscriptions",
-      "organizations_url": "https://api.github.com/users/vbottu/orgs",
-      "repos_url": "https://api.github.com/users/vbottu/repos",
-      "events_url": "https://api.github.com/users/vbottu/events{/privacy}",
-      "received_events_url": "https://api.github.com/users/vbottu/received_events",
-      "type": "User",
-      "user_view_type": "public",
-      "site_admin": false
-    },
-    "labels": [
-      {
-        "id": 125550211,
-        "node_id": "MDU6TGFiZWwxMjU1NTAyMTE=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/scheduling",
-        "name": "sig/scheduling",
-        "color": "d2b48c",
-        "default": false,
-        "description": "Categorizes an issue or PR as relevant to SIG Scheduling."
+        "description": "Categorizes an issue or PR as relevant to SIG Autoscaling."
       },
       {
         "id": 253450978,
@@ -432,15 +409,6 @@
         "description": "Denotes a PR that changes 100-499 lines, ignoring generated files."
       },
       {
-        "id": 267761362,
-        "node_id": "MDU6TGFiZWwyNjc3NjEzNjI=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/kind/feature",
-        "name": "kind/feature",
-        "color": "c7def8",
-        "default": false,
-        "description": "Categorizes issue or PR as related to a new feature."
-      },
-      {
         "id": 349530249,
         "node_id": "MDU6TGFiZWwzNDk1MzAyNDk=",
         "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/release-note-none",
@@ -448,6 +416,33 @@
         "color": "c2e0c6",
         "default": false,
         "description": "Denotes a PR that doesn't merit a release note."
+      },
+      {
+        "id": 357119284,
+        "node_id": "MDU6TGFiZWwzNTcxMTkyODQ=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/auth",
+        "name": "sig/auth",
+        "color": "d2b48c",
+        "default": false,
+        "description": "Categorizes an issue or PR as relevant to SIG Auth."
+      },
+      {
+        "id": 404091735,
+        "node_id": "MDU6TGFiZWw0MDQwOTE3MzU=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/apps",
+        "name": "sig/apps",
+        "color": "d2b48c",
+        "default": false,
+        "description": "Categorizes an issue or PR as relevant to SIG Apps."
+      },
+      {
+        "id": 450823910,
+        "node_id": "MDU6TGFiZWw0NTA4MjM5MTA=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/cli",
+        "name": "sig/cli",
+        "color": "d2b48c",
+        "default": false,
+        "description": "Categorizes an issue or PR as relevant to SIG CLI."
       },
       {
         "id": 477397086,
@@ -459,6 +454,15 @@
         "description": "Indicates the PR's author has signed the CNCF CLA."
       },
       {
+        "id": 483069764,
+        "node_id": "MDU6TGFiZWw0ODMwNjk3NjQ=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/testing",
+        "name": "sig/testing",
+        "color": "d2b48c",
+        "default": false,
+        "description": "Categorizes an issue or PR as relevant to SIG Testing."
+      },
+      {
         "id": 573014062,
         "node_id": "MDU6TGFiZWw1NzMwMTQwNjI=",
         "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/needs-ok-to-test",
@@ -466,6 +470,24 @@
         "color": "b60205",
         "default": false,
         "description": "Indicates a PR that requires an org member to verify it is safe to test."
+      },
+      {
+        "id": 687500047,
+        "node_id": "MDU6TGFiZWw2ODc1MDAwNDc=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/do-not-merge/work-in-progress",
+        "name": "do-not-merge/work-in-progress",
+        "color": "e11d21",
+        "default": false,
+        "description": "Indicates that a PR should not merge because it is a work in progress."
+      },
+      {
+        "id": 958178286,
+        "node_id": "MDU6TGFiZWw5NTgxNzgyODY=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/cloud-provider",
+        "name": "sig/cloud-provider",
+        "color": "d2b48c",
+        "default": false,
+        "description": "Categorizes an issue or PR as relevant to SIG Cloud Provider."
       },
       {
         "id": 1111992057,
@@ -477,6 +499,15 @@
         "description": "Indicates a PR lacks a `priority/foo` label and requires one."
       },
       {
+        "id": 1285569325,
+        "node_id": "MDU6TGFiZWwxMjg1NTY5MzI1",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/area/e2e-test-framework",
+        "name": "area/e2e-test-framework",
+        "color": "0052cc",
+        "default": false,
+        "description": "Issues or PRs related to refactoring the kubernetes e2e test framework"
+      },
+      {
         "id": 2389815605,
         "node_id": "MDU6TGFiZWwyMzg5ODE1NjA1",
         "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/needs-triage",
@@ -484,6 +515,15 @@
         "color": "ededed",
         "default": false,
         "description": "Indicates an issue or PR lacks a `triage/foo` label and requires one."
+      },
+      {
+        "id": 3025055720,
+        "node_id": "MDU6TGFiZWwzMDI1MDU1NzIw",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/wg/structured-logging",
+        "name": "wg/structured-logging",
+        "color": "d2b48c",
+        "default": false,
+        "description": "Categorizes an issue or PR as relevant to WG Structured Logging."
       }
     ],
     "state": "open",
@@ -493,25 +533,25 @@
 
     ],
     "milestone": null,
-    "comments": 4,
-    "created_at": "2025-11-30T05:37:44Z",
-    "updated_at": "2025-11-30T05:38:08Z",
+    "comments": 3,
+    "created_at": "2025-11-30T22:55:58Z",
+    "updated_at": "2025-11-30T23:00:03Z",
     "closed_at": null,
     "author_association": "NONE",
     "type": null,
     "active_lock_reason": null,
-    "draft": false,
+    "draft": true,
     "pull_request": {
-      "url": "https://api.github.com/repos/kubernetes/kubernetes/pulls/135516",
-      "html_url": "https://github.com/kubernetes/kubernetes/pull/135516",
-      "diff_url": "https://github.com/kubernetes/kubernetes/pull/135516.diff",
-      "patch_url": "https://github.com/kubernetes/kubernetes/pull/135516.patch",
+      "url": "https://api.github.com/repos/kubernetes/kubernetes/pulls/135524",
+      "html_url": "https://github.com/kubernetes/kubernetes/pull/135524",
+      "diff_url": "https://github.com/kubernetes/kubernetes/pull/135524.diff",
+      "patch_url": "https://github.com/kubernetes/kubernetes/pull/135524.patch",
       "merged_at": null
     },
-    "body": "**What type of PR is this?**\r\n\r\n/kind feature\r\n\r\n**What this PR does / why we need it:**\r\n\r\nEnables validation-gen for `scheduling.k8s.io v1/v1alpha1/v1beta1` API group\r\n\r\n• Adds DV support for PriorityClass\r\n\r\n**Which issue(s) this PR is related to:**\r\n\r\npart of #134280\r\n\r\n**Special notes for your reviewer:**\r\n\r\nThis PR does NOT migrate any validations: validation rules migration would be introduced in separate PRs.\r\n\r\n**Does this PR introduce a user-facing change?**\r\n\r\n```release-note\r\nNONE\r\n```\r\n**Additional documentation, e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:**\r\n```release-note\r\n- [KEP]: https://github.com/kubernetes/enhancements/blob/master/keps/sig-api-machinery/5073-declarative-validation-with-validation-gen/README.md\r\n",
+    "body": "#### What type of PR is this?\r\n/kind cleanup\r\n\r\n#### What this PR does / why we need it:\r\nWhen possible, updates existing calls to the non-contextual API `utilruntime.HandleError` within the new context-aware version `utilruntime.HandleErrorWithContext` or `utilruntime.HandleErrorWithLogger`.\r\n\r\nThis is required as part of the Kubernetes structured logging initiative to ensure that log output from this component is structured, carries contextual fields, and correctly respects context cancellation signals.\r\n\r\n#### Which issue(s) this PR is related to:\r\nRelated to https://github.com/kubernetes/kubernetes/issues/126379\r\n\r\n#### Special notes for your reviewer:\r\nContext Prioritization: \r\n\r\nThe inherited `context.Context` from the parent function was consistently reused and passed to the updated `HandleErrorWithContext` calls.\r\n\r\nWhere a context was absent but a logger was available, the call was updated to HandleErrorWithLogger.\r\n\r\nAvailable context or logger instances stored as attributes of the implementing struct were used for the contextual calls (WithContext or WithLogger).\r\n\r\nThe context was extracted from any passed-in HTTP request or WebSocket object and used to complete the call to `HandleErrorWithContext`.\r\n\r\n/wg structured-logging\r\n\r\n#### Does this PR introduce a user-facing change?\r\n```release-note\r\nNONE\r\n```\r\n\r\n- [Tracking Issue]: [https://github.com/kubernetes/kubernetes/issues/126379](https://github.com/kubernetes/kubernetes/issues/126379)\r\n\r\n",
     "closed_by": null,
     "reactions": {
-      "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135516/reactions",
+      "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135524/reactions",
       "total_count": 0,
       "+1": 0,
       "-1": 0,
@@ -522,21 +562,21 @@
       "rocket": 0,
       "eyes": 0
     },
-    "timeline_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135516/timeline",
+    "timeline_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135524/timeline",
     "performed_via_github_app": null,
     "state_reason": null
   },
   {
-    "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135515",
+    "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135523",
     "repository_url": "https://api.github.com/repos/kubernetes/kubernetes",
-    "labels_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135515/labels{/name}",
-    "comments_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135515/comments",
-    "events_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135515/events",
-    "html_url": "https://github.com/kubernetes/kubernetes/pull/135515",
-    "id": 3677292652,
-    "node_id": "PR_kwDOAToIks62J0zQ",
-    "number": 135515,
-    "title": "Add explicit type to feature gate const declarations",
+    "labels_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135523/labels{/name}",
+    "comments_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135523/comments",
+    "events_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135523/events",
+    "html_url": "https://github.com/kubernetes/kubernetes/issues/135523",
+    "id": 3678424302,
+    "node_id": "I_kwDOAToIks7bQEzu",
+    "number": 135523,
+    "title": "Failure cluster [a1b324df...] NFS related tests are failing",
     "user": {
       "login": "dims",
       "id": 23304,
@@ -560,94 +600,22 @@
     },
     "labels": [
       {
-        "id": 105146071,
-        "node_id": "MDU6TGFiZWwxMDUxNDYwNzE=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/kind/bug",
-        "name": "kind/bug",
-        "color": "e11d21",
-        "default": false,
-        "description": "Categorizes issue or PR as related to a bug."
-      },
-      {
-        "id": 114528223,
-        "node_id": "MDU6TGFiZWwxMTQ1MjgyMjM=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/priority/important-soon",
-        "name": "priority/important-soon",
-        "color": "eb6420",
-        "default": false,
-        "description": "Must be staffed and worked on either currently, or very soon, ideally in time for the next release."
-      },
-      {
-        "id": 122775691,
-        "node_id": "MDU6TGFiZWwxMjI3NzU2OTE=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/kind/cleanup",
-        "name": "kind/cleanup",
-        "color": "c7def8",
-        "default": false,
-        "description": "Categorizes issue or PR as related to cleaning up code, process, or technical debt."
-      },
-      {
-        "id": 148225179,
-        "node_id": "MDU6TGFiZWwxNDgyMjUxNzk=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/lgtm",
-        "name": "lgtm",
-        "color": "15dd18",
-        "default": false,
-        "description": "\"Looks good to me\", indicates that a PR is ready to be merged."
-      },
-      {
-        "id": 253450793,
-        "node_id": "MDU6TGFiZWwyNTM0NTA3OTM=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/size/XS",
-        "name": "size/XS",
-        "color": "009900",
-        "default": false,
-        "description": "Denotes a PR that changes 0-9 lines, ignoring generated files."
-      },
-      {
-        "id": 349530249,
-        "node_id": "MDU6TGFiZWwzNDk1MzAyNDk=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/release-note-none",
-        "name": "release-note-none",
-        "color": "c2e0c6",
-        "default": false,
-        "description": "Denotes a PR that doesn't merit a release note."
-      },
-      {
-        "id": 414883982,
-        "node_id": "MDU6TGFiZWw0MTQ4ODM5ODI=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/approved",
-        "name": "approved",
-        "color": "0ffa16",
-        "default": false,
-        "description": "Indicates a PR has been approved by an approver from all required OWNERS files."
-      },
-      {
-        "id": 477397086,
-        "node_id": "MDU6TGFiZWw0NzczOTcwODY=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/cncf-cla:%20yes",
-        "name": "cncf-cla: yes",
-        "color": "bfe5bf",
-        "default": false,
-        "description": "Indicates the PR's author has signed the CNCF CLA."
-      },
-      {
-        "id": 636152047,
-        "node_id": "MDU6TGFiZWw2MzYxNTIwNDc=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/architecture",
-        "name": "sig/architecture",
+        "id": 169428334,
+        "node_id": "MDU6TGFiZWwxNjk0MjgzMzQ=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/storage",
+        "name": "sig/storage",
         "color": "d2b48c",
         "default": false,
-        "description": "Categorizes an issue or PR as relevant to SIG Architecture."
+        "description": "Categorizes an issue or PR as relevant to SIG Storage."
       },
       {
-        "id": 687565804,
-        "node_id": "MDU6TGFiZWw2ODc1NjU4MDQ=",
-        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/do-not-merge/hold",
-        "name": "do-not-merge/hold",
+        "id": 496752468,
+        "node_id": "MDU6TGFiZWw0OTY3NTI0Njg=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/kind/failing-test",
+        "name": "kind/failing-test",
         "color": "e11d21",
         "default": false,
-        "description": "Indicates that a PR should not merge because someone has issued a /hold command."
+        "description": "Categorizes issue or PR as related to a consistently or frequently failing test."
       },
       {
         "id": 2389815605,
@@ -661,91 +629,33 @@
     ],
     "state": "open",
     "locked": false,
-    "assignee": {
-      "login": "liggitt",
-      "id": 980082,
-      "node_id": "MDQ6VXNlcjk4MDA4Mg==",
-      "avatar_url": "https://avatars.githubusercontent.com/u/980082?v=4",
-      "gravatar_id": "",
-      "url": "https://api.github.com/users/liggitt",
-      "html_url": "https://github.com/liggitt",
-      "followers_url": "https://api.github.com/users/liggitt/followers",
-      "following_url": "https://api.github.com/users/liggitt/following{/other_user}",
-      "gists_url": "https://api.github.com/users/liggitt/gists{/gist_id}",
-      "starred_url": "https://api.github.com/users/liggitt/starred{/owner}{/repo}",
-      "subscriptions_url": "https://api.github.com/users/liggitt/subscriptions",
-      "organizations_url": "https://api.github.com/users/liggitt/orgs",
-      "repos_url": "https://api.github.com/users/liggitt/repos",
-      "events_url": "https://api.github.com/users/liggitt/events{/privacy}",
-      "received_events_url": "https://api.github.com/users/liggitt/received_events",
-      "type": "User",
-      "user_view_type": "public",
-      "site_admin": false
-    },
+    "assignee": null,
     "assignees": [
-      {
-        "login": "liggitt",
-        "id": 980082,
-        "node_id": "MDQ6VXNlcjk4MDA4Mg==",
-        "avatar_url": "https://avatars.githubusercontent.com/u/980082?v=4",
-        "gravatar_id": "",
-        "url": "https://api.github.com/users/liggitt",
-        "html_url": "https://github.com/liggitt",
-        "followers_url": "https://api.github.com/users/liggitt/followers",
-        "following_url": "https://api.github.com/users/liggitt/following{/other_user}",
-        "gists_url": "https://api.github.com/users/liggitt/gists{/gist_id}",
-        "starred_url": "https://api.github.com/users/liggitt/starred{/owner}{/repo}",
-        "subscriptions_url": "https://api.github.com/users/liggitt/subscriptions",
-        "organizations_url": "https://api.github.com/users/liggitt/orgs",
-        "repos_url": "https://api.github.com/users/liggitt/repos",
-        "events_url": "https://api.github.com/users/liggitt/events{/privacy}",
-        "received_events_url": "https://api.github.com/users/liggitt/received_events",
-        "type": "User",
-        "user_view_type": "public",
-        "site_admin": false
-      },
-      {
-        "login": "lmktfy",
-        "id": 193443691,
-        "node_id": "U_kgDOC4e3aw",
-        "avatar_url": "https://avatars.githubusercontent.com/u/193443691?v=4",
-        "gravatar_id": "",
-        "url": "https://api.github.com/users/lmktfy",
-        "html_url": "https://github.com/lmktfy",
-        "followers_url": "https://api.github.com/users/lmktfy/followers",
-        "following_url": "https://api.github.com/users/lmktfy/following{/other_user}",
-        "gists_url": "https://api.github.com/users/lmktfy/gists{/gist_id}",
-        "starred_url": "https://api.github.com/users/lmktfy/starred{/owner}{/repo}",
-        "subscriptions_url": "https://api.github.com/users/lmktfy/subscriptions",
-        "organizations_url": "https://api.github.com/users/lmktfy/orgs",
-        "repos_url": "https://api.github.com/users/lmktfy/repos",
-        "events_url": "https://api.github.com/users/lmktfy/events{/privacy}",
-        "received_events_url": "https://api.github.com/users/lmktfy/received_events",
-        "type": "User",
-        "user_view_type": "public",
-        "site_admin": false
-      }
+
     ],
     "milestone": null,
-    "comments": 7,
-    "created_at": "2025-11-30T02:24:25Z",
-    "updated_at": "2025-11-30T03:49:46Z",
+    "comments": 3,
+    "created_at": "2025-11-30T21:18:44Z",
+    "updated_at": "2025-11-30T22:24:48Z",
     "closed_at": null,
     "author_association": "MEMBER",
     "type": null,
     "active_lock_reason": null,
-    "draft": false,
-    "pull_request": {
-      "url": "https://api.github.com/repos/kubernetes/kubernetes/pulls/135515",
-      "html_url": "https://github.com/kubernetes/kubernetes/pull/135515",
-      "diff_url": "https://github.com/kubernetes/kubernetes/pull/135515.diff",
-      "patch_url": "https://github.com/kubernetes/kubernetes/pull/135515.patch",
-      "merged_at": null
+    "sub_issues_summary": {
+      "total": 0,
+      "completed": 0,
+      "percent_completed": 0
     },
-    "body": "Two feature gate constants were missing the explicit `featuregate.Feature` type annotation, making them inconsistent with the rest of the file:\r\n- ChangeContainerStatusOnKubeletRestart\r\n- StatefulSetSemanticRevisionComparison\r\n\r\nThis will also ensure that these feature flags will get listed in `--help` output\r\n\r\n<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n/kind bug\r\n/kind cleanup\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n\r\n#### What this PR does / why we need it:\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nNONE\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n",
+    "issue_dependencies_summary": {
+      "blocked_by": 0,
+      "total_blocked_by": 0,
+      "blocking": 0,
+      "total_blocking": 0
+    },
+    "body": "Please see:\n\nhttps://storage.googleapis.com/k8s-triage/index.html?test=nfs%7CNFS\n\n### Failure cluster [a1b324df4662a9ae7224](https://go.k8s.io/triage#a1b324df4662a9ae7224)\n\n##### Error text:\n```\n[FAILED] expected pod \"exec-volume-test-dynamicpv-92dz\" success: Timed out after 300.001s.\nexpected pod to be Succeeded or Failed, got instead:\n    <*v1.Pod | 0xc0019bc508>: \n        metadata:\n          creationTimestamp: \"2025-11-16T22:21:12Z\"\n          generation: 1\n          labels:\n            topology.kubernetes.io/region: us-central1\n            topology.kubernetes.io/zone: us-central1-b\n          managedFields:\n          - apiVersion: v1\n            fieldsType: FieldsV1\n            fieldsV1:\n              f:spec:\n                f:containers:\n                  k:{\"name\":\"exec-container-dynamicpv-92dz\"}:\n                    .: {}\n                    f:command: {}\n                    f:image: {}\n                    f:imagePullPolicy: {}\n                    f:name: {}\n                    f:resources: {}\n                    f:terminationMessagePath: {}\n                    f:terminationMessagePolicy: {}\n                    f:volumeMounts:\n                      .: {}\n                      k:{\"mountPath\":\"/vol1\"}:\n                        .: {}\n                        f:mountPath: {}\n                        f:name: {}\n                f:dnsPolicy: {}\n                f:enableServiceLinks: {}\n                f:restartPolicy: {}\n                f:schedulerName: {}\n                f:securityContext: {}\n                f:terminationGracePeriodSeconds: {}\n                f:volumes:\n                  .: {}\n                  k:{\"name\":\"vol1\"}:\n                    .: {}\n                \n```\n#### Recent failures:\n[11/30/2025, 12:50:21 PM ci-cos-containerd-e2e-ubuntu-gce](https://prow.k8s.io/view/gs/kubernetes-ci-logs/logs/ci-cos-containerd-e2e-ubuntu-gce/1995188665990516736)\n[11/30/2025, 11:50:21 AM ci-cos-containerd-e2e-ubuntu-gce](https://prow.k8s.io/view/gs/kubernetes-ci-logs/logs/ci-cos-containerd-e2e-ubuntu-gce/1995173566168961024)\n[11/30/2025, 10:50:21 AM ci-cos-containerd-e2e-ubuntu-gce](https://prow.k8s.io/view/gs/kubernetes-ci-logs/logs/ci-cos-containerd-e2e-ubuntu-gce/1995158466510983168)\n[11/30/2025, 9:49:21 AM ci-cos-containerd-e2e-ubuntu-gce](https://prow.k8s.io/view/gs/kubernetes-ci-logs/logs/ci-cos-containerd-e2e-ubuntu-gce/1995143115140239360)\n[11/30/2025, 9:22:50 AM e2e-ci-kubernetes-e2e-al2023-aws-slow-canary](https://prow.k8s.io/view/gs/kubernetes-ci-logs/logs/e2e-ci-kubernetes-e2e-al2023-aws-slow-canary/1995136320141266944)\n\n\n/kind failing-test\n<!-- If this is a flake, please add: /kind flake -->\n\n/sig storage",
     "closed_by": null,
     "reactions": {
-      "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135515/reactions",
+      "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135523/reactions",
       "total_count": 0,
       "+1": 0,
       "-1": 0,
@@ -756,7 +666,198 @@
       "rocket": 0,
       "eyes": 0
     },
-    "timeline_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135515/timeline",
+    "timeline_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135523/timeline",
+    "performed_via_github_app": null,
+    "state_reason": null
+  },
+  {
+    "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135522",
+    "repository_url": "https://api.github.com/repos/kubernetes/kubernetes",
+    "labels_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135522/labels{/name}",
+    "comments_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135522/comments",
+    "events_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135522/events",
+    "html_url": "https://github.com/kubernetes/kubernetes/pull/135522",
+    "id": 3678371238,
+    "node_id": "PR_kwDOAToIks62NOoB",
+    "number": 135522,
+    "title": "Promote workqueue metrics from ALPHA to BETA",
+    "user": {
+      "login": "petern48",
+      "id": 115442597,
+      "node_id": "U_kgDOBuGDpQ",
+      "avatar_url": "https://avatars.githubusercontent.com/u/115442597?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/petern48",
+      "html_url": "https://github.com/petern48",
+      "followers_url": "https://api.github.com/users/petern48/followers",
+      "following_url": "https://api.github.com/users/petern48/following{/other_user}",
+      "gists_url": "https://api.github.com/users/petern48/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/petern48/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/petern48/subscriptions",
+      "organizations_url": "https://api.github.com/users/petern48/orgs",
+      "repos_url": "https://api.github.com/users/petern48/repos",
+      "events_url": "https://api.github.com/users/petern48/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/petern48/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "labels": [
+      {
+        "id": 105152717,
+        "node_id": "MDU6TGFiZWwxMDUxNTI3MTc=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/area/test",
+        "name": "area/test",
+        "color": "0052cc",
+        "default": false,
+        "description": null
+      },
+      {
+        "id": 200149833,
+        "node_id": "MDU6TGFiZWwyMDAxNDk4MzM=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/release-note",
+        "name": "release-note",
+        "color": "c2e0c6",
+        "default": false,
+        "description": "Denotes a PR that will be considered when it comes time to generate release notes."
+      },
+      {
+        "id": 253450978,
+        "node_id": "MDU6TGFiZWwyNTM0NTA5Nzg=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/size/L",
+        "name": "size/L",
+        "color": "ee9900",
+        "default": false,
+        "description": "Denotes a PR that changes 100-499 lines, ignoring generated files."
+      },
+      {
+        "id": 261005360,
+        "node_id": "MDU6TGFiZWwyNjEwMDUzNjA=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/kind/api-change",
+        "name": "kind/api-change",
+        "color": "e11d21",
+        "default": false,
+        "description": "Categorizes issue or PR as related to adding, removing, or otherwise changing an API"
+      },
+      {
+        "id": 477397086,
+        "node_id": "MDU6TGFiZWw0NzczOTcwODY=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/cncf-cla:%20yes",
+        "name": "cncf-cla: yes",
+        "color": "bfe5bf",
+        "default": false,
+        "description": "Indicates the PR's author has signed the CNCF CLA."
+      },
+      {
+        "id": 482207917,
+        "node_id": "MDU6TGFiZWw0ODIyMDc5MTc=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/instrumentation",
+        "name": "sig/instrumentation",
+        "color": "d2b48c",
+        "default": false,
+        "description": "Categorizes an issue or PR as relevant to SIG Instrumentation."
+      },
+      {
+        "id": 483069764,
+        "node_id": "MDU6TGFiZWw0ODMwNjk3NjQ=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/testing",
+        "name": "sig/testing",
+        "color": "d2b48c",
+        "default": false,
+        "description": "Categorizes an issue or PR as relevant to SIG Testing."
+      },
+      {
+        "id": 573014062,
+        "node_id": "MDU6TGFiZWw1NzMwMTQwNjI=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/needs-ok-to-test",
+        "name": "needs-ok-to-test",
+        "color": "b60205",
+        "default": false,
+        "description": "Indicates a PR that requires an org member to verify it is safe to test."
+      },
+      {
+        "id": 636152047,
+        "node_id": "MDU6TGFiZWw2MzYxNTIwNDc=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/sig/architecture",
+        "name": "sig/architecture",
+        "color": "d2b48c",
+        "default": false,
+        "description": "Categorizes an issue or PR as relevant to SIG Architecture."
+      },
+      {
+        "id": 687500047,
+        "node_id": "MDU6TGFiZWw2ODc1MDAwNDc=",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/do-not-merge/work-in-progress",
+        "name": "do-not-merge/work-in-progress",
+        "color": "e11d21",
+        "default": false,
+        "description": "Indicates that a PR should not merge because it is a work in progress."
+      },
+      {
+        "id": 1111992057,
+        "node_id": "MDU6TGFiZWwxMTExOTkyMDU3",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/needs-priority",
+        "name": "needs-priority",
+        "color": "ededed",
+        "default": false,
+        "description": "Indicates a PR lacks a `priority/foo` label and requires one."
+      },
+      {
+        "id": 2389815605,
+        "node_id": "MDU6TGFiZWwyMzg5ODE1NjA1",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/needs-triage",
+        "name": "needs-triage",
+        "color": "ededed",
+        "default": false,
+        "description": "Indicates an issue or PR lacks a `triage/foo` label and requires one."
+      },
+      {
+        "id": 3967150925,
+        "node_id": "LA_kwDOAToIks7sdetN",
+        "url": "https://api.github.com/repos/kubernetes/kubernetes/labels/area/stable-metrics",
+        "name": "area/stable-metrics",
+        "color": "0052cc",
+        "default": false,
+        "description": "Issues or PRs involving stable metrics"
+      }
+    ],
+    "state": "open",
+    "locked": false,
+    "assignee": null,
+    "assignees": [
+
+    ],
+    "milestone": null,
+    "comments": 5,
+    "created_at": "2025-11-30T20:41:29Z",
+    "updated_at": "2025-11-30T21:25:24Z",
+    "closed_at": null,
+    "author_association": "NONE",
+    "type": null,
+    "active_lock_reason": null,
+    "draft": true,
+    "pull_request": {
+      "url": "https://api.github.com/repos/kubernetes/kubernetes/pulls/135522",
+      "html_url": "https://github.com/kubernetes/kubernetes/pull/135522",
+      "diff_url": "https://github.com/kubernetes/kubernetes/pull/135522.diff",
+      "patch_url": "https://github.com/kubernetes/kubernetes/pull/135522.patch",
+      "merged_at": null
+    },
+    "body": "<!--  Thanks for sending a pull request!  Here are some tips for you:\r\n\r\n1. If this is your first time, please read our contributor guidelines: https://git.k8s.io/community/contributors/guide/first-contribution.md#your-first-contribution and developer guide https://git.k8s.io/community/contributors/devel/development.md#development-guide\r\n2. Please label this pull request according to what type of issue you are addressing, especially if this is a release targeted pull request. For reference on required PR/issue labels, read here:\r\nhttps://git.k8s.io/community/contributors/devel/sig-release/release.md#issuepr-kind-label\r\n3. Ensure you have added or ran the appropriate tests for your PR: https://git.k8s.io/community/contributors/devel/sig-testing/testing.md\r\n4. If you want *faster* PR reviews, read how: https://git.k8s.io/community/contributors/guide/pull-requests.md#best-practices-for-faster-reviews\r\n5. If the PR is unfinished, see how to mark it: https://git.k8s.io/community/contributors/guide/pull-requests.md#marking-unfinished-pull-requests\r\n-->\r\n\r\n#### What type of PR is this?\r\n\r\n<!--\r\nAdd one of the following kinds:\r\n/kind bug\r\n/kind cleanup\r\n/kind documentation\r\n/kind feature\r\n\r\nOptionally add one or more of the following kinds if applicable:\r\n/kind api-change\r\n/kind deprecation\r\n/kind failing-test\r\n/kind flake\r\n/kind regression\r\n-->\r\n/kind api-change\r\n\r\n\r\n#### What this PR does / why we need it:\r\n\r\nPromote the workqueue metrics from alpha to beta as mentioned in the issue.\r\n\r\n#### Which issue(s) this PR is related to:\r\n<!--\r\nPlease link relevant issues to help with tracking.\r\n\r\nTo automatically close the linked issue(s) when this PR is merged,\r\nadd the word \"Fixes\" before the issue number or link.\r\nDo not use \"Fixes\" if the PR is of kind `failing-test` or `flake`.\r\n\r\nReference KEPs when applicable in addition to specific issues.\r\n\r\nExamples:\r\nFixes #<issue number>\r\n<issue link> (issue in a different repository)\r\nKEP: https://github.com/kubernetes/enhancements/issues/<kep-issue-number>\r\n\r\nIf there is no associated issue, then write \"N/A\".\r\n-->\r\n\r\nFixes #135463\r\n\r\n#### Special notes for your reviewer:\r\n\r\n#### Does this PR introduce a user-facing change?\r\n<!--\r\nIf no, just write \"NONE\" in the release-note block below.\r\nIf yes, a release note is required:\r\nEnter your extended release note in the block below. If the PR requires additional action from users switching to the new release, include the string \"action required\".\r\n\r\nFor more information on release notes see: https://git.k8s.io/community/contributors/guide/release-notes.md\r\n-->\r\n```release-note\r\nPromote workqueue metrics from ALPHA to BETA\r\n```\r\n\r\n#### Additional documentation e.g., KEPs (Kubernetes Enhancement Proposals), usage docs, etc.:\r\n\r\n<!--\r\nThis section can be blank if this pull request does not require a release note.\r\n\r\nWhen adding links which point to resources within git repositories, like\r\nKEPs or supporting documentation, please reference a specific commit and avoid\r\nlinking directly to the master branch. This ensures that links reference a\r\nspecific point in time, rather than a document that may change over time.\r\n\r\nSee here for guidance on getting permanent links to files: https://help.github.com/en/articles/getting-permanent-links-to-files\r\n\r\nPlease use the following format for linking documentation:\r\n- [KEP]: <link>\r\n- [Usage]: <link>\r\n- [Other doc]: <link>\r\n-->\r\n```docs\r\n\r\n```\r\n\r\n/sig instrumentation",
+    "closed_by": null,
+    "reactions": {
+      "url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135522/reactions",
+      "total_count": 0,
+      "+1": 0,
+      "-1": 0,
+      "laugh": 0,
+      "hooray": 0,
+      "confused": 0,
+      "heart": 0,
+      "rocket": 0,
+      "eyes": 0
+    },
+    "timeline_url": "https://api.github.com/repos/kubernetes/kubernetes/issues/135522/timeline",
     "performed_via_github_app": null,
     "state_reason": null
   }
