@@ -1,0 +1,286 @@
+name: Issue Status Updater
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+  schedule:
+    - cron: '0 */12 * * *'  # Run every 12 hours
+
+jobs:
+  update-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pandas gspread oauth2client
+      
+      - name: Create service account key file
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT }}' > service_account.json
+      
+      - name: Update issue statuses
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
+        run: |
+          cat > update_issues.py << 'EOF'
+          import requests
+          import json
+          import time
+          import pandas as pd
+          import gspread
+          from oauth2client.service_account import ServiceAccountCredentials
+          from datetime import datetime, timedelta
+          import os
+
+          # Get GitHub token from environment
+          github_token = os.environ.get('GITHUB_TOKEN')
+          if not github_token:
+              raise ValueError("GITHUB_TOKEN environment variable is not set")
+
+          # Configure Google Sheets API
+          scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+          credentials = ServiceAccountCredentials.from_json_keyfile_name('service_account.json', scope)
+          gc = gspread.authorize(credentials)
+
+          # Open the spreadsheet - use your existing sheet ID
+          spreadsheet = gc.open_by_key('19PfXdNw--raP07c3tLzOBYcAC44-AfPeM-nxI8t4cKA')
+          raw_issues_sheet = spreadsheet.worksheet('Raw_Issues')
+          issue_updates_sheet = spreadsheet.worksheet('Issue_Updates')
+
+          # GitHub API functions
+          def github_api_request(endpoint, params=None):
+              url = f"https://api.github.com{endpoint}"
+              headers = {
+                  'Authorization': f'token {github_token}',
+                  'Accept': 'application/vnd.github.v3+json'
+              }
+              
+              # Check rate limit before making request
+              rate_limit = check_rate_limit()
+              if rate_limit['remaining'] < 10:
+                  wait_time = rate_limit['reset'] - int(time.time()) + 10
+                  print(f"Rate limit low ({rate_limit['remaining']}). Waiting {wait_time} seconds...")
+                  time.sleep(wait_time)
+              
+              response = requests.get(url, headers=headers, params=params)
+              
+              # Handle rate limiting
+              if response.status_code == 403 and 'rate limit exceeded' in response.text:
+                  reset_time = int(response.headers.get('X-RateLimit-Reset', 0))
+                  wait_time = reset_time - int(time.time()) + 10
+                  print(f"Rate limit exceeded. Waiting {wait_time} seconds...")
+                  time.sleep(wait_time)
+                  return github_api_request(endpoint, params)  # Retry
+              
+              response.raise_for_status()
+              return response.json()
+
+          def check_rate_limit():
+              url = "https://api.github.com/rate_limit"
+              headers = {'Authorization': f'token {github_token}'}
+              response = requests.get(url, headers=headers)
+              data = response.json()
+              return {
+                  'limit': data['rate']['limit'],
+                  'remaining': data['rate']['remaining'],
+                  'reset': data['rate']['reset']
+              }
+
+          def get_issue_current_status(repo_full_name, issue_number):
+              """Get the current status of an issue from GitHub"""
+              try:
+                  issue = github_api_request(f"/repos/{repo_full_name}/issues/{issue_number}")
+                  
+                  # Extract assignee username if assigned
+                  assignee = issue['assignee']['login'] if issue.get('assignee') else None
+                  
+                  # Extract labels as a list of strings
+                  labels = [label['name'] for label in issue.get('labels', [])]
+                  
+                  return {
+                      'state': issue['state'],
+                      'updated_at': issue['updated_at'],
+                      'closed_at': issue.get('closed_at'),
+                      'assignee': assignee,
+                      'comments_count': issue['comments'],
+                      'labels': labels
+                  }
+              except Exception as e:
+                  print(f"Error getting issue {repo_full_name}#{issue_number}: {str(e)}")
+                  return None
+
+          def update_issue_status(row_idx, issue_id, current_data, existing_data):
+              """Update an issue's status in the sheet and log changes"""
+              changes = []
+              
+              # Check for changes
+              if current_data['state'] != existing_data['state']:
+                  changes.append({
+                      'field': 'state',
+                      'previous': existing_data['state'],
+                      'new': current_data['state']
+                  })
+              
+              if current_data['assignee'] != existing_data['assignee']:
+                  changes.append({
+                      'field': 'assignee',
+                      'previous': existing_data['assignee'],
+                      'new': current_data['assignee']
+                  })
+              
+              if current_data['comments_count'] != existing_data['comments_count']:
+                  changes.append({
+                      'field': 'comments_count',
+                      'previous': existing_data['comments_count'],
+                      'new': current_data['comments_count']
+                  })
+              
+              # If changes detected, update the issue and log the changes
+              if changes:
+                  # Update the issue in the sheet
+                  raw_issues_sheet.update_cell(row_idx, 7, current_data['state'])  # state
+                  raw_issues_sheet.update_cell(row_idx, 9, current_data['updated_at'])  # updated_at
+                  raw_issues_sheet.update_cell(row_idx, 10, current_data['closed_at'] or '')  # closed_at
+                  raw_issues_sheet.update_cell(row_idx, 12, current_data['assignee'] or '')  # assignee
+                  raw_issues_sheet.update_cell(row_idx, 14, current_data['comments_count'])  # comments_count
+                  raw_issues_sheet.update_cell(row_idx, 17, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))  # last_scanned_at
+                  
+                  # Log the changes
+                  for change in changes:
+                      update_id = f"{issue_id}-{int(time.time())}"
+                      update_values = [
+                          update_id,
+                          issue_id,
+                          f"changed_{change['field']}",
+                          change['previous'],
+                          change['new'],
+                          datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                          json.dumps(change)
+                      ]
+                      issue_updates_sheet.append_row(update_values)
+                  
+                  print(f"Updated issue {issue_id} with {len(changes)} changes")
+                  return 'updated'
+              else:
+                  # Just update the last_scanned_at field
+                  raw_issues_sheet.update_cell(row_idx, 17, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                  print(f"No changes for issue {issue_id}")
+                  return 'unchanged'
+
+          # Main execution
+          print("Starting issue status updater...")
+
+          # Get all issues from the sheet
+          all_issues = raw_issues_sheet.get_all_values()
+          header = all_issues[0]
+          issues = all_issues[1:]
+
+          # Find column indices
+          repo_idx = header.index('repo_full_name') if 'repo_full_name' in header else 1
+          issue_number_idx = header.index('issue_number') if 'issue_number' in header else 3
+          state_idx = header.index('state') if 'state' in header else 6
+          assignee_idx = header.index('assignee') if 'assignee' in header else 11
+          comments_idx = header.index('comments_count') if 'comments_count' in header else 13
+          last_scanned_idx = header.index('last_scanned_at') if 'last_scanned_at' in header else 16
+
+          # Process issues
+          stats = {'updated': 0, 'unchanged': 0, 'errors': 0, 'total': len(issues)}
+          
+          # Focus on recently updated issues and open issues
+          prioritized_issues = []
+          for i, issue in enumerate(issues):
+              if len(issue) <= state_idx:
+                  continue  # Skip incomplete rows
+                  
+              # Calculate priority based on state and last scan time
+              priority = 0
+              
+              # Open issues get higher priority
+              if issue[state_idx] == 'open':
+                  priority += 100
+              
+              # Recently scanned issues get lower priority (we want to focus on ones we haven't checked in a while)
+              if len(issue) > last_scanned_idx and issue[last_scanned_idx]:
+                  try:
+                      last_scanned = datetime.strptime(issue[last_scanned_idx].split()[0], '%Y-%m-%d')
+                      days_since_scan = (datetime.now() - last_scanned).days
+                      # Higher priority for issues not scanned recently
+                      priority += min(days_since_scan * 10, 100)
+                  except:
+                      priority += 50  # If we can't parse the date, give medium priority
+              else:
+                  priority += 50  # If no last scan date, give medium priority
+              
+              prioritized_issues.append((i, issue, priority))
+          
+          # Sort by priority (highest first)
+          prioritized_issues.sort(key=lambda x: x[2], reverse=True)
+          
+          # Process issues up to rate limit
+          rate_limit = check_rate_limit()
+          max_issues = min(rate_limit['remaining'] - 50, 1000)  # Leave 50 requests as buffer
+          
+          print(f"Processing up to {max_issues} issues (rate limit: {rate_limit['remaining']})")
+          
+          processed = 0
+          for i, issue, priority in prioritized_issues:
+              if processed >= max_issues:
+                  break
+                  
+              row_idx = i + 2  # +1 for 0-index, +1 for header
+              issue_id = issue[0]
+              repo_name = issue[repo_idx]
+              issue_number = issue[issue_number_idx]
+              
+              if not repo_name or not issue_number:
+                  continue
+                  
+              try:
+                  issue_number = int(issue_number)
+              except:
+                  continue  # Skip if issue number is not a valid integer
+              
+              print(f"Checking issue {repo_name}#{issue_number} (priority: {priority})")
+              
+              # Get current status from GitHub
+              current_status = get_issue_current_status(repo_name, issue_number)
+              
+              if current_status:
+                  # Get existing data
+                  existing_data = {
+                      'state': issue[state_idx],
+                      'assignee': issue[assignee_idx] if len(issue) > assignee_idx else None,
+                      'comments_count': int(issue[comments_idx]) if len(issue) > comments_idx and issue[comments_idx].isdigit() else 0
+                  }
+                  
+                  # Update status
+                  result = update_issue_status(row_idx, issue_id, current_status, existing_data)
+                  
+                  if result == 'updated':
+                      stats['updated'] += 1
+                  else:
+                      stats['unchanged'] += 1
+              else:
+                  stats['errors'] += 1
+              
+              processed += 1
+              time.sleep(0.5)  # Be nice to the API
+          
+          print(f"Issue status update complete! Processed {processed} issues.")
+          print(f"Stats: {stats['updated']} updated, {stats['unchanged']} unchanged, {stats['errors']} errors")
+          EOF
+          
+          python update_issues.py
+      
+      - name: Clean up
+        run: |
+          rm service_account.json
+          rm update_issues.py
