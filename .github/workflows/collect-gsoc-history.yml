@@ -186,17 +186,24 @@ jobs:
               time.sleep(2)
 
           # Update GSoC_Years sheet
-          # Get existing data
-          existing_years = years_sheet.get_all_values()
-          if len(existing_years) > 1:
-              # Clear existing data except header (delete rows one by one)
-              for i in range(len(existing_years) - 1, 0, -1):
-                  years_sheet.delete_row(i + 1)  # +1 because rows are 1-indexed
-          
-          # Append new data
-          if years_data:
-              years_sheet.append_rows(years_data)
-              print(f"Updated GSoC_Years sheet with {len(years_data)} years")
+          # Instead of deleting rows, just clear the values and append
+          try:
+              # Get the number of rows in the sheet
+              num_rows = len(years_sheet.get_all_values())
+              if num_rows > 1:
+                  # Clear all rows except header
+                  years_sheet.batch_clear([f'A2:D{num_rows}'])
+              
+              # Append new data
+              if years_data:
+                  years_sheet.append_rows(years_data)
+                  print(f"Updated GSoC_Years sheet with {len(years_data)} years")
+          except Exception as e:
+              print(f"Error updating years sheet: {str(e)}")
+              # Just append the data without clearing
+              if years_data:
+                  years_sheet.append_rows(years_data)
+                  print(f"Appended {len(years_data)} years to GSoC_Years sheet")
 
           # Prepare organizations data for sheet
           orgs_data = []
