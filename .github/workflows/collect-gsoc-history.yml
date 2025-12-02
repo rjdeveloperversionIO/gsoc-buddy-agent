@@ -2,8 +2,6 @@ name: Collect GSoC Historical Organizations
 
 on:
   workflow_dispatch:  # Allows manual triggering
-  schedule:
-    - cron: '0 0 1 * *'  # Run monthly on the 1st
 
 jobs:
   collect-history:
@@ -24,18 +22,8 @@ jobs:
       
       - name: Create service account key file
         run: |
-          # Write the secret directly to the file
           echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT }}' > service_account.json
-          
-          # Check if the file exists and has content
-          if [ ! -s service_account.json ]; then
-            echo "Error: service_account.json is empty"
-            exit 1
-          fi
-          
-          # Print file size
-          echo "Service account file size:"
-          ls -la service_account.json
+      
       - name: Collect GSoC historical data
         run: |
           cat > collect_gsoc_history.py << 'EOF'
@@ -89,31 +77,15 @@ jobs:
               print(f"Scraping organizations for GSoC {year}...")
               
               try:
-                  response = requests.get(url)
+                  headers = {
+                      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+                  }
+                  response = requests.get(url, headers=headers)
                   response.raise_for_status()
                   
                   soup = BeautifulSoup(response.text, 'html.parser')
                   orgs = []
                   
-                 
-# If we still have no organizations, use a fallback approach
-if not orgs:
-    # Use a hardcoded list of known organizations
-    known_orgs = [
-        "Zulip", "TensorFlow", "Python Software Foundation", 
-        "The Linux Foundation", "GNOME", "KDE", "Mozilla",
-        "Wikimedia Foundation", "Apache Software Foundation",
-        "Drupal", "JBoss Community", "LibreOffice", "CERN",
-        "Blender Foundation", "Debian", "Django Software Foundation"
-    ]for name in known_orgs:
-         orgs.append({
-            'name': name,
-            'website': None,
-            'github_org': None,
-            'description': None,
-            'gsoc_years': [str(year)]
-        })
-    print(f"Using fallback list: {len(orgs)} organizations")
                   # Different scraping logic based on year (different page structures)
                   if year >= 2023:
                       # 2023-2024 format
@@ -157,6 +129,26 @@ if not orgs:
                               'gsoc_years': [str(year)]
                           })
                   
+                  # If we still have no organizations, use a fallback approach
+                  if not orgs:
+                      # Use a hardcoded list of known organizations
+                      known_orgs = [
+                          "Zulip", "TensorFlow", "Python Software Foundation", 
+                          "The Linux Foundation", "GNOME", "KDE", "Mozilla",
+                          "Wikimedia Foundation", "Apache Software Foundation",
+                          "Drupal", "JBoss Community", "LibreOffice", "CERN",
+                          "Blender Foundation", "Debian", "Django Software Foundation"
+                      ]
+                      for name in known_orgs:
+                          orgs.append({
+                              'name': name,
+                              'website': None,
+                              'github_org': None,
+                              'description': None,
+                              'gsoc_years': [str(year)]
+                          })
+                      print(f"Using fallback list: {len(orgs)} organizations")
+                  
                   print(f"Found {len(orgs)} organizations for {year}")
                   return orgs, len(orgs)
               
@@ -193,13 +185,19 @@ if not orgs:
               # Be nice to the server
               time.sleep(2)
 
-         # Update GSoC_Years sheet
-         # Get existing data
-         existing_years = years_sheet.get_all_values()
-         if len(existing_years) > 1:
-            # Clear existing data except header (delete rows one by one)
-            for i in range(len(existing_years) - 1, 0, -1):
-               years_sheet.delete_row(i + 1)  # +1 because rows are 1-indexed
+          # Update GSoC_Years sheet
+          # Get existing data
+          existing_years = years_sheet.get_all_values()
+          if len(existing_years) > 1:
+              # Clear existing data except header (delete rows one by one)
+              for i in range(len(existing_years) - 1, 0, -1):
+                  years_sheet.delete_row(i + 1)  # +1 because rows are 1-indexed
+          
+          # Append new data
+          if years_data:
+              years_sheet.append_rows(years_data)
+              print(f"Updated GSoC_Years sheet with {len(years_data)} years")
+
           # Prepare organizations data for sheet
           orgs_data = []
           for name, org in all_orgs.items():
@@ -249,8 +247,3 @@ if not orgs:
           EOF
           
           python collect_gsoc_history.py
-      
-      - name: Clean up
-        run: |
-          rm service_account.json
-          rm collect_gsoc_history.py
