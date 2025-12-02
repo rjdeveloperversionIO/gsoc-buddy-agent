@@ -1,0 +1,175 @@
+name: Issue Analyzer
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+  schedule:
+    - cron: '0 */12 * * *'  # Run every 12 hours
+
+jobs:
+  analyze-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pandas gspread oauth2client
+      
+      - name: Create service account key file
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT }}' > service_account.json
+      
+      - name: Analyze issues with AI
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          cat > analyze_issues.py << 'EOF'
+          import os
+          import json
+          import time
+          import gspread
+          from oauth2client.service_account import ServiceAccountCredentials
+          from datetime import datetime
+          import sys
+          
+          # Add scripts directory to path
+          sys.path.append('scripts')
+          from ai_integration import analyze_issue
+          
+          # Configure Google Sheets API
+          scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+          credentials = ServiceAccountCredentials.from_json_keyfile_name('service_account.json', scope)
+          gc = gspread.authorize(credentials)
+          
+          # Open the spreadsheet - use your existing sheet ID
+          spreadsheet = gc.open_by_key('19PfXdNw--raP07c3tLzOBYcAC44-AfPeM-nxI8t4cKA')
+          raw_issues_sheet = spreadsheet.worksheet('Raw_Issues')
+          analyzed_issues_sheet = spreadsheet.worksheet('Analyzed_Issues')
+          
+          def get_raw_issues():
+              """Get all raw issues from the sheet"""
+              all_issues = raw_issues_sheet.get_all_values()
+              header = all_issues[0]
+              issues = all_issues[1:]
+              
+              # Find column indices
+              issue_id_idx = header.index('issue_id') if 'issue_id' in header else 0
+              repo_idx = header.index('repo_full_name') if 'repo_full_name' in header else 1
+              org_idx = header.index('org_name') if 'org_name' in header else 2
+              title_idx = header.index('title') if 'title' in header else 4
+              url_idx = header.index('html_url') if 'html_url' in header else 5
+              state_idx = header.index('state') if 'state' in header else 6
+              labels_idx = header.index('labels') if 'labels' in header else 10
+              body_idx = header.index('body_excerpt') if 'body_excerpt' in header else 12
+              
+              # Convert to list of dictionaries
+              issue_dicts = []
+              for issue in issues:
+                  if len(issue) <= issue_id_idx:
+                      continue  # Skip incomplete rows
+                      
+                  issue_dict = {
+                      'issue_id': issue[issue_id_idx],
+                      'repo_full_name': issue[repo_idx] if len(issue) > repo_idx else '',
+                      'org_name': issue[org_idx] if len(issue) > org_idx else '',
+                      'title': issue[title_idx] if len(issue) > title_idx else '',
+                      'html_url': issue[url_idx] if len(issue) > url_idx else '',
+                      'state': issue[state_idx] if len(issue) > state_idx else '',
+                      'labels': issue[labels_idx].split(',') if len(issue) > labels_idx and issue[labels_idx] else [],
+                      'body_excerpt': issue[body_idx] if len(issue) > body_idx else ''
+                  }
+                  issue_dicts.append(issue_dict)
+              
+              return issue_dicts
+          
+          def get_analyzed_issues():
+              """Get all analyzed issues from the sheet"""
+              all_issues = analyzed_issues_sheet.get_all_values()
+              if len(all_issues) <= 1:
+                  return {}  # Only header or empty
+                  
+              header = all_issues[0]
+              issues = all_issues[1:]
+              
+              # Find column indices
+              issue_id_idx = header.index('issue_id') if 'issue_id' in header else 0
+              
+              # Create a dictionary of issue_id -> row_index
+              analyzed = {}
+              for i, issue in enumerate(issues, start=2):  # Start from row 2 (1-indexed)
+                  if len(issue) > issue_id_idx:
+                      analyzed[issue[issue_id_idx]] = i
+              
+              return analyzed
+          
+          def analyze_and_update_issues(raw_issues, analyzed_issues):
+              """Analyze issues and update the analyzed issues sheet"""
+              stats = {'new': 0, 'skipped': 0, 'total': len(raw_issues)}
+              
+              # Process only open issues that haven't been analyzed yet
+              for issue in raw_issues:
+                  issue_id = issue['issue_id']
+                  
+                  # Skip if already analyzed or not open
+                  if issue_id in analyzed_issues or issue['state'] != 'open':
+                      stats['skipped'] += 1
+                      continue
+                  
+                  print(f"Analyzing issue: {issue_id}")
+                  
+                  # Analyze the issue
+                  try:
+                      analysis = analyze_issue(issue)
+                      
+                      # Prepare row for analyzed issues sheet
+                      row_values = [
+                          issue_id,
+                          issue['repo_full_name'],
+                          issue['org_name'],
+                          issue['title'],
+                          issue['html_url'],
+                          issue['state'],
+                          analysis.get('difficulty_score', 5),
+                          ','.join(analysis.get('required_skills', ['Unknown'])),
+                          analysis.get('estimated_time_hours', 8),
+                          'TRUE' if analysis.get('beginner_friendly', True) else 'FALSE',
+                          0,  # competition_level (will be calculated later)
+                          0,  # strategic_value (will be calculated later)
+                          datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                      ]
+                      
+                      # Add to analyzed issues sheet
+                      analyzed_issues_sheet.append_row(row_values)
+                      stats['new'] += 1
+                      
+                      # Don't hit the API too hard
+                      time.sleep(1)
+                  except Exception as e:
+                      print(f"Error analyzing issue {issue_id}: {str(e)}")
+              
+              return stats
+          
+          # Main execution
+          print("Starting issue analyzer...")
+          
+          # Get raw and analyzed issues
+          raw_issues = get_raw_issues()
+          analyzed_issues = get_analyzed_issues()
+          
+          print(f"Found {len(raw_issues)} raw issues and {len(analyzed_issues)} analyzed issues")
+          
+          # Analyze issues
+          stats = analyze_and_update_issues(raw_issues, analyzed_issues)
+          
+          print(f"Analysis complete! Analyzed {stats['new']} new issues, skipped {stats['skipped']} issues")
+          EOF
+          
+          python analyze_issues.py
