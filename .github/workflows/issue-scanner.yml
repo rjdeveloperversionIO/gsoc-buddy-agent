@@ -1,0 +1,370 @@
+name: Issue Scanner
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+  schedule:
+    - cron: '0 */6 * * *'  # Run every 6 hours
+
+jobs:
+  scan-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pandas gspread oauth2client
+      
+      - name: Create service account key file
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT }}' > service_account.json
+      
+      - name: Scan for beginner-friendly issues
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
+        run: |
+          cat > scan_issues.py << 'EOF'
+          import requests
+          import json
+          import time
+          import pandas as pd
+          import gspread
+          from oauth2client.service_account import ServiceAccountCredentials
+          from datetime import datetime, timedelta
+          import os
+          import re
+
+          # Get GitHub token from environment
+          github_token = os.environ.get('GITHUB_TOKEN')
+          if not github_token:
+              raise ValueError("GITHUB_TOKEN environment variable is not set")
+
+          # Configure Google Sheets API
+          scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+          credentials = ServiceAccountCredentials.from_json_keyfile_name('service_account.json', scope)
+          gc = gspread.authorize(credentials)
+
+          # Open the spreadsheet - use your existing sheet ID
+          spreadsheet = gc.open_by_key('19PfXdNw--raP07c3tLzOBYcAC44-AfPeM-nxI8t4cKA')
+          orgs_sheet = spreadsheet.worksheet('Organizations')
+          raw_issues_sheet = spreadsheet.worksheet('Raw_Issues')
+          issue_updates_sheet = spreadsheet.worksheet('Issue_Updates')
+
+          # GitHub API functions
+          def github_api_request(endpoint, params=None):
+              url = f"https://api.github.com{endpoint}"
+              headers = {
+                  'Authorization': f'token {github_token}',
+                  'Accept': 'application/vnd.github.v3+json'
+              }
+              
+              # Check rate limit before making request
+              rate_limit = check_rate_limit()
+              if rate_limit['remaining'] < 10:
+                  wait_time = rate_limit['reset'] - int(time.time()) + 10
+                  print(f"Rate limit low ({rate_limit['remaining']}). Waiting {wait_time} seconds...")
+                  time.sleep(wait_time)
+              
+              response = requests.get(url, headers=headers, params=params)
+              
+              # Handle rate limiting
+              if response.status_code == 403 and 'rate limit exceeded' in response.text:
+                  reset_time = int(response.headers.get('X-RateLimit-Reset', 0))
+                  wait_time = reset_time - int(time.time()) + 10
+                  print(f"Rate limit exceeded. Waiting {wait_time} seconds...")
+                  time.sleep(wait_time)
+                  return github_api_request(endpoint, params)  # Retry
+              
+              response.raise_for_status()
+              return response.json()
+
+          def check_rate_limit():
+              url = "https://api.github.com/rate_limit"
+              headers = {'Authorization': f'token {github_token}'}
+              response = requests.get(url, headers=headers)
+              data = response.json()
+              return {
+                  'limit': data['rate']['limit'],
+                  'remaining': data['rate']['remaining'],
+                  'reset': data['rate']['reset']
+              }
+
+          def get_beginner_friendly_issues(repo_full_name, org_name):
+              """Get beginner-friendly issues from a repository"""
+              # Labels that typically indicate beginner-friendly issues
+              beginner_labels = [
+                  'good-first-issue', 'good first issue', 'beginner', 'beginner-friendly',
+                  'easy', 'starter', 'newbie', 'first-timers-only', 'help wanted',
+                  'easy fix', 'low hanging fruit'
+              ]
+              
+              # Create label query string
+              label_query = ','.join(beginner_labels)
+              
+              # Get issues with these labels
+              issues = []
+              page = 1
+              while True:
+                  try:
+                      # Get open issues with beginner-friendly labels
+                      params = {
+                          'state': 'open',
+                          'labels': label_query,
+                          'per_page': 100,
+                          'page': page
+                      }
+                      response = github_api_request(f"/repos/{repo_full_name}/issues", params)
+                      
+                      if not response:
+                          break
+                      
+                      # Filter out pull requests (GitHub API returns both issues and PRs)
+                      for issue in response:
+                          if 'pull_request' not in issue:
+                              # Add org_name to the issue data
+                              issue['org_name'] = org_name
+                              issues.append(issue)
+                      
+                      if len(response) < 100:
+                          break
+                      
+                      page += 1
+                      time.sleep(1)  # Be nice to the API
+                  except Exception as e:
+                      print(f"Error getting issues for {repo_full_name}: {str(e)}")
+                      break
+              
+              return issues
+
+          def extract_issue_data(issue):
+              """Extract relevant data from an issue"""
+              # Create a unique ID combining repo and issue number
+              repo_name = issue['repository_url'].split('/')[-2] + '/' + issue['repository_url'].split('/')[-1]
+              issue_id = f"{repo_name}#{issue['number']}"
+              
+              # Extract labels as a list of strings
+              labels = [label['name'] for label in issue.get('labels', [])]
+              
+              # Extract assignee username if assigned
+              assignee = issue['assignee']['login'] if issue.get('assignee') else None
+              
+              # Get a short excerpt of the body (first 200 chars)
+              body_excerpt = issue.get('body', '')[:200] if issue.get('body') else ''
+              
+              # Count reactions if available
+              reactions_count = sum(issue.get('reactions', {}).values()) if issue.get('reactions') else 0
+              
+              return {
+                  'issue_id': issue_id,
+                  'repo_full_name': repo_name,
+                  'org_name': issue['org_name'],
+                  'issue_number': issue['number'],
+                  'title': issue['title'],
+                  'html_url': issue['html_url'],
+                  'state': issue['state'],
+                  'created_at': issue['created_at'],
+                  'updated_at': issue['updated_at'],
+                  'closed_at': issue.get('closed_at'),
+                  'labels': labels,
+                  'assignee': assignee,
+                  'body_excerpt': body_excerpt,
+                  'comments_count': issue['comments'],
+                  'reactions_count': reactions_count,
+                  'first_scanned_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                  'last_scanned_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+              }
+
+          def update_issue_in_sheet(issue_data, existing_issues):
+              """Update an issue in the sheet or add it if it's new"""
+              issue_id = issue_data['issue_id']
+              
+              # Check if issue already exists
+              if issue_id in existing_issues:
+                  # Get the row index
+                  row_idx = existing_issues[issue_id]['row_idx']
+                  
+                  # Get existing data
+                  existing_data = existing_issues[issue_id]['data']
+                  
+                  # Check if anything has changed
+                  changes = []
+                  if existing_data['state'] != issue_data['state']:
+                      changes.append({
+                          'field': 'state',
+                          'previous': existing_data['state'],
+                          'new': issue_data['state']
+                      })
+                  
+                  if existing_data['assignee'] != issue_data['assignee']:
+                      changes.append({
+                          'field': 'assignee',
+                          'previous': existing_data['assignee'],
+                          'new': issue_data['assignee']
+                      })
+                  
+                  if existing_data['comments_count'] != issue_data['comments_count']:
+                      changes.append({
+                          'field': 'comments_count',
+                          'previous': existing_data['comments_count'],
+                          'new': issue_data['comments_count']
+                      })
+                  
+                  # If changes detected, update the issue and log the changes
+                  if changes:
+                      # Update the issue
+                      issue_data['first_scanned_at'] = existing_data['first_scanned_at']  # Preserve original scan date
+                      row_values = [
+                          issue_data['issue_id'],
+                          issue_data['repo_full_name'],
+                          issue_data['org_name'],
+                          issue_data['issue_number'],
+                          issue_data['title'],
+                          issue_data['html_url'],
+                          issue_data['state'],
+                          issue_data['created_at'],
+                          issue_data['updated_at'],
+                          issue_data['closed_at'] or '',
+                          ','.join(issue_data['labels']),
+                          issue_data['assignee'] or '',
+                          issue_data['body_excerpt'],
+                          issue_data['comments_count'],
+                          issue_data['reactions_count'],
+                          issue_data['first_scanned_at'],
+                          issue_data['last_scanned_at']
+                      ]
+                      raw_issues_sheet.update(f'A{row_idx}:Q{row_idx}', [row_values])
+                      
+                      # Log the changes
+                      for change in changes:
+                          update_id = f"{issue_id}-{int(time.time())}"
+                          update_values = [
+                              update_id,
+                              issue_id,
+                              f"changed_{change['field']}",
+                              change['previous'],
+                              change['new'],
+                              datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                              json.dumps(change)
+                          ]
+                          issue_updates_sheet.append_row(update_values)
+                      
+                      print(f"Updated issue {issue_id} with {len(changes)} changes")
+                      return 'updated'
+                  else:
+                      # Just update the last_scanned_at field
+                      raw_issues_sheet.update_cell(row_idx, 17, datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                      print(f"No changes for issue {issue_id}")
+                      return 'unchanged'
+              else:
+                  # New issue, add it
+                  row_values = [
+                      issue_data['issue_id'],
+                      issue_data['repo_full_name'],
+                      issue_data['org_name'],
+                      issue_data['issue_number'],
+                      issue_data['title'],
+                      issue_data['html_url'],
+                      issue_data['state'],
+                      issue_data['created_at'],
+                      issue_data['updated_at'],
+                      issue_data['closed_at'] or '',
+                      ','.join(issue_data['labels']),
+                      issue_data['assignee'] or '',
+                      issue_data['body_excerpt'],
+                      issue_data['comments_count'],
+                      issue_data['reactions_count'],
+                      issue_data['first_scanned_at'],
+                      issue_data['last_scanned_at']
+                  ]
+                  raw_issues_sheet.append_row(row_values)
+                  
+                  # Log the new issue
+                  update_id = f"{issue_id}-{int(time.time())}"
+                  update_values = [
+                      update_id,
+                      issue_id,
+                      'new_issue',
+                      '',
+                      'open',
+                      datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                      json.dumps({'title': issue_data['title']})
+                  ]
+                  issue_updates_sheet.append_row(update_values)
+                  
+                  print(f"Added new issue {issue_id}")
+                  return 'new'
+
+          # Main execution
+          print("Starting issue scanner...")
+
+          # Get all organizations from sheet
+          orgs_data = orgs_sheet.get_all_records()
+
+          # Get existing issues
+          existing_issues_data = raw_issues_sheet.get_all_values()
+          existing_issues = {}
+          if len(existing_issues_data) > 1:  # If we have data beyond the header
+              for i, row in enumerate(existing_issues_data[1:], start=2):  # Start from row 2 (1-indexed)
+                  if len(row) > 0:  # Ensure row has data
+                      issue_id = row[0]
+                      existing_issues[issue_id] = {
+                          'row_idx': i,
+                          'data': {
+                              'issue_id': row[0],
+                              'repo_full_name': row[1],
+                              'org_name': row[2],
+                              'issue_number': int(row[3]) if row[3].isdigit() else 0,
+                              'title': row[4],
+                              'html_url': row[5],
+                              'state': row[6],
+                              'created_at': row[7],
+                              'updated_at': row[8],
+                              'closed_at': row[9] if row[9] else None,
+                              'labels': row[10].split(',') if row[10] else [],
+                              'assignee': row[11] if row[11] else None,
+                              'body_excerpt': row[12],
+                              'comments_count': int(row[13]) if row[13].isdigit() else 0,
+                              'reactions_count': int(row[14]) if row[14].isdigit() else 0,
+                              'first_scanned_at': row[15],
+                              'last_scanned_at': row[16]
+                          }
+                      }
+
+          # Process organizations with GitHub usernames
+          stats = {'new': 0, 'updated': 0, 'unchanged': 0, 'orgs_processed': 0, 'repos_scanned': 0}
+          
+          # Prioritize organizations that have participated in recent GSoC years
+          orgs_data.sort(key=lambda x: len(x.get('gsoc_years', '').split(',')) if x.get('gsoc_years') else 0, reverse=True)
+          
+          # Process each organization
+          for org in orgs_data:
+              github_org = org.get('github_org')
+              if not github_org:
+                  continue
+              
+              print(f"Processing organization: {github_org}")
+              stats['orgs_processed'] += 1
+              
+              try:
+                  # Get repositories for this organization
+                  repos = []
+                  page = 1
+                  while True:
+                      repos_page = github_api_request(f"/orgs/{github_org}/repos", {'per_page': 100, 'page': page, 'sort': 'updated'})
+                      if not repos_page:
+                          break
+                      repos.extend(repos_page)
+                      if len(repos_page) < 100:
+                          break
+                      page += 1
+                      time.sleep(1)  # Be nice to the API
+                  
+                  # Sort repositories by number of stars (most popular first)
+                  
