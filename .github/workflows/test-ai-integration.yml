@@ -1,0 +1,61 @@
+name: Test AI Integration
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+
+jobs:
+  test-ai:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+      
+      - name: Test AI Integration
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          python scripts/ai_integration.py
+      
+      - name: Test Issue Analysis
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          cat > test_analysis.py << 'EOF'
+          from scripts.ai_integration import analyze_issue, generate_resolution_guide
+          import json
+          
+          # Sample issue data
+          test_issue = {
+              "title": "Fix button alignment in dark mode",
+              "repo_full_name": "example/repo",
+              "org_name": "Example Organization",
+              "body_excerpt": "The submit button is misaligned when using dark mode. It appears 10px to the right of where it should be.",
+              "labels": ["bug", "good first issue", "css", "ui"]
+          }
+          
+          # Test analysis
+          print("Testing issue analysis...")
+          analysis = analyze_issue(test_issue)
+          print(json.dumps(analysis, indent=2))
+          
+          # Test guide generation
+          print("\nTesting resolution guide generation...")
+          guide = generate_resolution_guide(test_issue, analysis)
+          print(guide[:500] + "...\n[Guide truncated for brevity]")
+          
+          print("\nTests completed successfully!")
+          EOF
+          
+          python test_analysis.py
