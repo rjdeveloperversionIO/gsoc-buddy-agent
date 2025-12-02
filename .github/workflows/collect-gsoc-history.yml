@@ -239,9 +239,24 @@ jobs:
               print("No new organizations to add")
 
           # Update config
-          config_sheet = spreadsheet.worksheet('Config')
-          config_sheet.update('B2', datetime.now().strftime('%Y-%m-%d'))
-          print("Updated last_full_update in Config sheet")
+          try:
+              config_sheet = spreadsheet.worksheet('Config')
+              # Fix: Use update_cell instead of update
+              config_sheet.update_cell(2, 2, datetime.now().strftime('%Y-%m-%d'))
+              print("Updated last_full_update in Config sheet")
+          except Exception as e:
+              print(f"Error updating config: {str(e)}")
+              # Try to create Config sheet if it doesn't exist
+              try:
+                  spreadsheet.add_worksheet(title="Config", rows=10, cols=5)
+                  config_sheet = spreadsheet.worksheet('Config')
+                  config_sheet.update_cell(1, 1, "config_key")
+                  config_sheet.update_cell(1, 2, "value")
+                  config_sheet.update_cell(2, 1, "last_full_update")
+                  config_sheet.update_cell(2, 2, datetime.now().strftime('%Y-%m-%d'))
+                  print("Created Config sheet and updated last_full_update")
+              except:
+                  print("Could not create or update Config sheet")
 
           print("GSoC historical data collection complete!")
           EOF
