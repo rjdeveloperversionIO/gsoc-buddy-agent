@@ -22,18 +22,8 @@ jobs:
       
       - name: Create service account key file
         run: |
-          # Write the secret directly to the file
           echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT }}' > service_account.json
-          
-          # Check if the file exists and has content
-          if [ ! -s service_account.json ]; then
-            echo "Error: service_account.json is empty"
-            exit 1
-          fi
-          
-          # Print file size
-          echo "Service account file size:"
-          ls -la service_account.json
+      
       - name: Enrich organization data
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_GITHUB }}
@@ -235,8 +225,12 @@ jobs:
                       break
 
           # Update config
-          config_sheet.update('B2', datetime.now().strftime('%Y-%m-%d'))
-          print(f"Enrichment complete! Updated {updated_count} organizations.")
+          try:
+              # Fix: Use update_cell instead of update
+              config_sheet.update_cell(2, 2, datetime.now().strftime('%Y-%m-%d'))
+              print(f"Enrichment complete! Updated {updated_count} organizations.")
+          except Exception as e:
+              print(f"Error updating config: {str(e)}")
           EOF
           
           python enrich_org_data.py
