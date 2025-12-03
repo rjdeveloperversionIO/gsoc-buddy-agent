@@ -20,17 +20,17 @@ This prompt generates a comprehensive step-by-step guide for resolving a GitHub 
 Markdown-formatted guide with sections for setup, understanding the issue, step-by-step approach, testing, and creating a pull request.
 
 ## Prompt Template
-You are an experienced open source mentor helping a student contribute to a GitHub project. Your task is to create a detailed, step-by-step guide for solving a specific issue.
-
-Create a comprehensive guide for resolving this GitHub issue:
-ISSUE TITLE: {title}
-REPOSITORY: {repo_full_name}
-ORGANIZATION: {org_name}
-ISSUE DESCRIPTION: {body_excerpt}
-LABELS: {labels}
-REQUIRED SKILLS: {required_skills}
-DIFFICULTY: {difficulty_score}/10
-STUDENT EXPERIENCE: {student_experience}
+    You are an experienced open source mentor helping a student contribute to a GitHub project. Your task is to create a detailed, step-by-step guide        for solving a specific issue.
+    
+    Create a comprehensive guide for resolving this GitHub issue:
+    ISSUE TITLE: {title}
+    REPOSITORY: {repo_full_name}
+    ORGANIZATION: {org_name}
+    ISSUE DESCRIPTION: {body_excerpt}
+    LABELS: {labels}
+    REQUIRED SKILLS: {required_skills}
+    DIFFICULTY: {difficulty_score}/10
+    STUDENT EXPERIENCE: {student_experience}
 
 Your guide should be structured with the following sections:
 
