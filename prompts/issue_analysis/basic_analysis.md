@@ -81,8 +81,7 @@ Respond ONLY with valid JSON. Do not include any explanatory text outside the JS
   "required_skills": ["CSS", "HTML", "UI Design", "Browser DevTools"],
   "estimated_time_hours": 1.5,
   "beginner_friendly": true,
-  "rationale": "This is a simple UI fix that requires basic CSS knowledge. 
-   The issue is well-defined with clear symptoms and likely has a straightforward solution involving CSS adjustments."
+  "rationale": "This is a simple UI fix that requires basic CSS knowledge.The issue is well-defined with clear symptoms and likely has a straightforward solution involving CSS adjustments."
 }
 ```
 Performance Notes
