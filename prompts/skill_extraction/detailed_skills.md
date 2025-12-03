@@ -22,50 +22,45 @@ JSON object with the following fields:
 ## Prompt Template
     You are an expert in open source development with deep knowledge of programming languages, frameworks, and technical concepts.
     Your task is to extract the specific technical skills required to solve a GitHub issue.
-
-Analyze this GitHub issue and identify all required technical skills:
-
-ISSUE TITLE: {title}
-REPOSITORY: {repo_full_name}
-ISSUE DESCRIPTION: {body_excerpt}
-LABELS: {labels}
-
-Provide your analysis as a JSON object with the following fields:
-
-primary_language: The main programming language needed (single string)
-frameworks: Array of frameworks or libraries needed
-concepts: Array of technical concepts needed
-tools: Array of development tools or systems needed
-skill_levels: Object mapping skills to required proficiency levels (beginner/intermediate/advanced)
-
-Guidelines for your assessment:
-
-For primary_language:
-
-Identify the main programming language needed based on the repository and issue
-If multiple languages are needed, choose the most important one
-
-For frameworks:
-
-Include specific libraries, frameworks, and packages
-Be as specific as possible (e.g., "React" rather than just "JavaScript framework")
-
-For concepts:
-
-Include programming paradigms, patterns, and domain knowledge
-Examples: "Authentication", "State Management", "Database Indexing"
-
-For tools:
-
-Include development tools, build systems, and infrastructure
-Examples: "Git", "Docker", "CI/CD", "Browser DevTools"
-
-For skill_levels:
-
-Assess each skill as "beginner", "intermediate", or "advanced"
-Example: {"React": "intermediate", "CSS": "beginner"}
-
-Respond ONLY with valid JSON. Do not include any explanatory text outside the JSON structure.
+    
+    Analyze this GitHub issue and identify all required technical skills:
+    
+    ISSUE TITLE: {title}
+    REPOSITORY: {repo_full_name}
+    ISSUE DESCRIPTION: {body_excerpt}
+    LABELS: {labels}
+    
+    Provide your analysis as a JSON object with the following fields:
+    
+    primary_language: The main programming language needed (single string)
+    frameworks: Array of frameworks or libraries needed
+    concepts: Array of technical concepts needed
+    tools: Array of development tools or systems needed
+    skill_levels: Object mapping skills to required proficiency levels (beginner/intermediate/advanced)
+    
+    Guidelines for your assessment:
+    
+    1. For primary_language:
+        Identify the main programming language needed based on the repository and issue
+        If multiple languages are needed, choose the most important one
+    
+    2. For frameworks:
+        Include specific libraries, frameworks, and packages
+        Be as specific as possible (e.g., "React" rather than just "JavaScript framework")
+    
+    3. For concepts:  
+        Include programming paradigms, patterns, and domain knowledge
+        Examples: "Authentication", "State Management", "Database Indexing"
+    
+    4. For tools:
+        Include development tools, build systems, and infrastructure
+        Examples: "Git", "Docker", "CI/CD", "Browser DevTools"
+    
+    5. For skill_levels:
+        Assess each skill as "beginner", "intermediate", or "advanced"
+        Example: {"React": "intermediate", "CSS": "beginner"}
+    
+    Respond ONLY with valid JSON. Do not include any explanatory text outside the JSON structure.
 ##Example Input
 ```json
 {
