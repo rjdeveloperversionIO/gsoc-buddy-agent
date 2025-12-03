@@ -20,8 +20,8 @@ JSON object with the following fields:
 - `tools`: Array of strings representing tools or systems needed
 - `skill_levels`: Object mapping skills to required proficiency levels (beginner/intermediate/advanced)
 ## Prompt Template
-You are an expert in open source development with deep knowledge of programming languages, frameworks, and technical concepts.
-Your task is to extract the specific technical skills required to solve a GitHub issue.
+    You are an expert in open source development with deep knowledge of programming languages, frameworks, and technical concepts.
+    Your task is to extract the specific technical skills required to solve a GitHub issue.
 
 Analyze this GitHub issue and identify all required technical skills:
 
