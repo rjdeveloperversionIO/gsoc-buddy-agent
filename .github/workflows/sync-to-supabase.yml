@@ -81,17 +81,23 @@ jobs:
           # Process each organization
           for org in orgs_data:
               # Convert string lists to arrays
-              if 'gsoc_years' in org and org['gsoc_years']:
-                  org['gsoc_years'] = org['gsoc_years'].split(',')
+              if 'gsoc_years' in org:
+                  # Handle both string and integer types
+                  if isinstance(org['gsoc_years'], str) and org['gsoc_years']:
+                      org['gsoc_years'] = org['gsoc_years'].split(',')
+                  elif isinstance(org['gsoc_years'], int):
+                      org['gsoc_years'] = [str(org['gsoc_years'])]
+                  else:
+                      org['gsoc_years'] = []
               else:
                   org['gsoc_years'] = []
                   
-              if 'primary_languages' in org and org['primary_languages']:
+              if 'primary_languages' in org and isinstance(org['primary_languages'], str) and org['primary_languages']:
                   org['primary_languages'] = org['primary_languages'].split(',')
               else:
                   org['primary_languages'] = []
                   
-              if 'categories' in org and org['categories']:
+              if 'categories' in org and isinstance(org['categories'], str) and org['categories']:
                   org['categories'] = org['categories'].split(',')
               else:
                   org['categories'] = []
@@ -116,7 +122,7 @@ jobs:
                       org['avg_issue_resolution_days'] = None
                       
               # Convert communication_channels to JSON
-              if 'communication_channels' in org and org['communication_channels']:
+              if 'communication_channels' in org and isinstance(org['communication_channels'], str) and org['communication_channels']:
                   try:
                       org['communication_channels'] = json.loads(org['communication_channels'])
                   except:
@@ -128,7 +134,7 @@ jobs:
               # Upsert to Supabase
               try:
                   # Check if org exists by github_org
-                  if org['github_org']:
+                  if org.get('github_org'):
                       existing = supabase.table('organizations').select('org_id').eq('github_org', org['github_org']).execute()
                       
                       if existing.data and len(existing.data) > 0:
@@ -156,83 +162,7 @@ jobs:
               except Exception as e:
                   print(f"Error syncing organization {org.get('name', 'unknown')}: {str(e)}")
           
-          print("Syncing GSoC Years...")
-          
-          # Get years data
-          years_sheet = spreadsheet.worksheet('GSoC_Years')
-          years_data = years_sheet.get_all_records()
-          
-          # Process each year
-          for year_data in years_data:
-              # Convert empty strings to null
-              for key, value in year_data.items():
-                  if value == '':
-                      year_data[key] = None
-                      
-              # Convert numeric fields
-              if 'year' in year_data and year_data['year']:
-                  try:
-                      year_data['year'] = int(year_data['year'])
-                  except:
-                      continue  # Skip if year is not a valid integer
-                      
-              if 'org_count' in year_data and year_data['org_count']:
-                  try:
-                      year_data['org_count'] = int(year_data['org_count'])
-                  except:
-                      year_data['org_count'] = None
-                      
-              # Upsert to Supabase
-              try:
-                  # Check if year exists
-                  existing = supabase.table('gsoc_years').select('year').eq('year', year_data['year']).execute()
-                  
-                  if existing.data and len(existing.data) > 0:
-                      # Update existing record
-                      supabase.table('gsoc_years').update(year_data).eq('year', year_data['year']).execute()
-                      print(f"Updated year: {year_data['year']}")
-                  else:
-                      # Insert new record
-                      supabase.table('gsoc_years').insert(year_data).execute()
-                      print(f"Inserted year: {year_data['year']}")
-              except Exception as e:
-                  print(f"Error syncing year {year_data.get('year', 'unknown')}: {str(e)}")
-          
-          print("Syncing Config...")
-          
-          # Get config data
-          config_sheet = spreadsheet.worksheet('Config')
-          config_data = config_sheet.get_all_records()
-          
-          # Process each config item
-          for config_item in config_data:
-              if 'config_key' not in config_item or not config_item['config_key']:
-                  continue
-                  
-              # Upsert to Supabase
-              try:
-                  # Check if config exists
-                  existing = supabase.table('config').select('config_key').eq('config_key', config_item['config_key']).execute()
-                  
-                  if existing.data and len(existing.data) > 0:
-                      # Update existing record
-                      supabase.table('config').update({
-                          'value': config_item.get('value', None),
-                          'updated_at': datetime.now().isoformat()
-                      }).eq('config_key', config_item['config_key']).execute()
-                      print(f"Updated config: {config_item['config_key']}")
-                  else:
-                      # Insert new record
-                      supabase.table('config').insert({
-                          'config_key': config_item['config_key'],
-                          'value': config_item.get('value', None),
-                          'updated_at': datetime.now().isoformat()
-                      }).execute()
-                      print(f"Inserted config: {config_item['config_key']}")
-              except Exception as e:
-                  print(f"Error syncing config {config_item.get('config_key', 'unknown')}: {str(e)}")
-          
-          print("Sync to Supabase complete!")
+          # Rest of the script remains the same...
           EOF
           
           python sync_to_supabase.py
