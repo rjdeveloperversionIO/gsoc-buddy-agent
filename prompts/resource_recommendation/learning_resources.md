@@ -33,31 +33,31 @@ JSON object with the following fields:
     PREFERRED LEARNING STYLE: {learning_style}
     TIME AVAILABLE: {time_available}
 
-Provide your recommendations as a JSON object with the following structure:
-```json
-{
-  "resources": [
-    {
-      "skill": "skill name",
-      "title": "resource title",
-      "type": "resource type",
-      "url": "URL or description",
-      "time_estimate": "estimated hours to complete",
-      "difficulty": "beginner/intermediate/advanced",
-      "why_recommended": "brief explanation"
-    }
-  ]
-}
-```
-Guidelines for your recommendations:
-1. Focus on the skills the student needs to learn (required but not already known)
-2. Prioritize free, high-quality resources
-3. Match resources to the student's learning style when specified
-4. Consider the student's available time and recommend resources that fit within their constraints
-5. Include a mix of resource types (documentation, tutorials, videos, etc.)
-6. For each skill, recommend 1-3 resources, starting with the most fundamental
-7. Only recommend resources you're confident actually exist
-Respond ONLY with valid JSON. Do not include any explanatory text outside the JSON structure.
+    Provide your recommendations as a JSON object with the following structure:
+        ```json
+        {
+          "resources": [
+            {
+              "skill": "skill name",
+              "title": "resource title",
+              "type": "resource type",
+              "url": "URL or description",
+              "time_estimate": "estimated hours to complete",
+              "difficulty": "beginner/intermediate/advanced",
+              "why_recommended": "brief explanation"
+            }
+          ]
+        }
+        ```
+    Guidelines for your recommendations:
+    1. Focus on the skills the student needs to learn (required but not already known)
+    2. Prioritize free, high-quality resources
+    3. Match resources to the student's learning style when specified
+    4. Consider the student's available time and recommend resources that fit within their constraints
+    5. Include a mix of resource types (documentation, tutorials, videos, etc.)
+    6. For each skill, recommend 1-3 resources, starting with the most fundamental
+    7. Only recommend resources you're confident actually exist
+    Respond ONLY with valid JSON. Do not include any explanatory text outside the JSON structure.
 
 ## Example Input
 ```json
