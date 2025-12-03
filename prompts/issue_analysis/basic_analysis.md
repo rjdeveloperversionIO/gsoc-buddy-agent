@@ -65,7 +65,7 @@ An issue can be beginner_friendly even if it requires some learning
 Respond ONLY with valid JSON. Do not include any explanatory text outside the JSON structure.
 
 ##Example Input
-'''json
+```json
 {
   "title": "Fix button alignment in dark mode",
   "repo_full_name": "example/repo",
@@ -73,8 +73,9 @@ Respond ONLY with valid JSON. Do not include any explanatory text outside the JS
   "body_excerpt": "The submit button is misaligned when using dark mode. It appears 10px to the right of where it should be.",
   "labels": ["bug", "good first issue", "css", "ui"]
 }
+```
 ## Example Output
-'''json
+```json
 {
   "difficulty_score": 2,
   "required_skills": ["CSS", "HTML", "UI Design", "Browser DevTools"],
@@ -83,6 +84,7 @@ Respond ONLY with valid JSON. Do not include any explanatory text outside the JS
   "rationale": "This is a simple UI fix that requires basic CSS knowledge. 
    The issue is well-defined with clear symptoms and likely has a straightforward solution involving CSS adjustments."
 }
+```
 Performance Notes
 The model sometimes includes unnecessary explanations outside the JSON structure. The instruction to respond ONLY with valid JSON helps mitigate this.
 For very technical issues, the model may underestimate the difficulty. Consider adding domain-specific context for better assessment.
