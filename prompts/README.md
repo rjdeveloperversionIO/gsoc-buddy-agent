@@ -14,6 +14,7 @@ This directory contains the prompt templates used by the GSoC Buddy AI agent to 
 
 Each prompt template is stored as a markdown file with the following structure:
 [Prompt Name]
+
 Description
 Brief description of what this prompt does
 
@@ -22,30 +23,29 @@ Current version number
 
 Input Variables
 variable_name: Description of the variable
+
 Expected Output Format
 Description of the expected output format (usually JSON)
 
 Prompt Template
-text
-
 [The actual prompt template with {variable} placeholders]
-Example Input
-JSON
+
+## Example Input
+```JSON
 
 {
   "variable_name": "example value"
 }
-Example Output
-JSON
+```
+## Example Output
+```JSON
 
 {
   "field": "value"
 }
+```
 Performance Notes
 Any notes on the performance of this prompt, including common issues
-
-text
-
 
 ## Usage
 
