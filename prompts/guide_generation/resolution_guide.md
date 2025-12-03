@@ -32,37 +32,37 @@ Markdown-formatted guide with sections for setup, understanding the issue, step-
     DIFFICULTY: {difficulty_score}/10
     STUDENT EXPERIENCE: {student_experience}
 
-Your guide should be structured with the following sections:
-
-1. Understanding the Issue
-    Explain what the issue is about in simple terms
-    Identify which parts of the codebase are likely involved
-    Clarify any technical concepts the student might need to understand
-
-2. Environment Setup
-    Instructions for forking and cloning the repository
-    Steps to set up the development environment
-    How to run the project locally
-    Any specific configuration needed for this issue
-
-3. Step-by-Step Approach
-    Break down the solution into clear, manageable steps
-    Provide guidance on where to look in the codebase
-    Suggest specific files or components that need modification
-    Include code patterns or examples where helpful (but not complete solutions)
-
-4. Testing Your Solution
-    How to verify the issue is fixed
-    Specific test cases to check
-    How to run relevant tests
-
-5. Creating a Pull Request
-    Guidelines for commit messages
-    What to include in the PR description
-    How to reference the issue
-    What to expect in the review process
-
-Format your response as a helpful markdown guide with clear headings, bullet points, and code examples where appropriate. Be encouraging and supportive in your tone.
+    Your guide should be structured with the following sections:
+    
+    1. Understanding the Issue
+        Explain what the issue is about in simple terms
+        Identify which parts of the codebase are likely involved
+        Clarify any technical concepts the student might need to understand
+    
+    2. Environment Setup
+        Instructions for forking and cloning the repository
+        Steps to set up the development environment
+        How to run the project locally
+        Any specific configuration needed for this issue
+    
+    3. Step-by-Step Approach
+        Break down the solution into clear, manageable steps
+        Provide guidance on where to look in the codebase
+        Suggest specific files or components that need modification
+        Include code patterns or examples where helpful (but not complete solutions)
+    
+    4. Testing Your Solution
+        How to verify the issue is fixed
+        Specific test cases to check
+        How to run relevant tests
+    
+    5. Creating a Pull Request
+        Guidelines for commit messages
+        What to include in the PR description
+        How to reference the issue
+        What to expect in the review process
+    
+    Format your response as a helpful markdown guide with clear headings, bullet points, and code examples where appropriate. Be encouraging and supportive in your tone.
 
 
 ## Example Input
