@@ -22,15 +22,16 @@ JSON object with the following fields:
 - `rationale`: String explaining the assessment
 
 ## Prompt Template
-You are an expert software developer with extensive experience mentoring beginners in open source projects.
-Your task is to analyze a GitHub issue and assess its suitability for beginners, particularly students applying to Google Summer of Code.
-Analyze this GitHub issue and extract the following information:
+    You are an expert software developer with extensive experience mentoring beginners in open source projects.
+    Your task is to analyze a GitHub issue and assess its suitability for beginners, particularly students applying to Google Summer of Code.
+    Analyze this GitHub issue and extract the following information:
+    
+    ISSUE TITLE: {title}
+    REPOSITORY: {repo_full_name}
+    ORGANIZATION: {org_name}
+    ISSUE DESCRIPTION: {body_excerpt}
+    LABELS: {labels}
 
-ISSUE TITLE: {title}
-REPOSITORY: {repo_full_name}
-ORGANIZATION: {org_name}
-ISSUE DESCRIPTION: {body_excerpt}
-LABELS: {labels}
 Provide your analysis as a JSON object with the following fields:
 
 difficulty_score: A number from 1-10 (1=very easy, 10=very difficult)
