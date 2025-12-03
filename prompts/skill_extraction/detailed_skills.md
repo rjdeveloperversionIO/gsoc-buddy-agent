@@ -67,15 +67,16 @@ Example: {"React": "intermediate", "CSS": "beginner"}
 
 Respond ONLY with valid JSON. Do not include any explanatory text outside the JSON structure.
 ##Example Input
-'''json
+```json
 {
   "title": "Implement OAuth authentication with Google",
   "repo_full_name": "example/web-app",
   "body_excerpt": "We need to add Google OAuth authentication to our login system. This should use the existing authentication framework but add a new provider.",
   "labels": ["enhancement", "authentication", "frontend"]
 }
+```
 ##Example Output
-'''json
+```json
 {
   "primary_language": "JavaScript",
   "frameworks": ["OAuth 2.0", "Google API Client", "Express.js"],
@@ -93,7 +94,8 @@ Respond ONLY with valid JSON. Do not include any explanatory text outside the JS
     "Git": "beginner",
     "Browser DevTools": "beginner",
     "Postman": "beginner"
-  }
+}
+```
 Performance Notes
 The model may sometimes infer frameworks that aren't explicitly mentioned in the issue. This is generally helpful but can occasionally lead to incorrect assumptions.
 For repositories with multiple languages, the model might need more context about the codebase to accurately determine the primary language.
