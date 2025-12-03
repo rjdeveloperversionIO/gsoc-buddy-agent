@@ -28,17 +28,17 @@ Markdown-formatted PR template with sections for description, changes made, test
     ISSUE DESCRIPTION: {body_excerpt}
     LABELS: {labels}
     CHANGES MADE: {changes_made}
-
-Create a comprehensive PR template with the following sections:
-1. Title (a clear, concise title for the PR)
-2. Description (summary of what the PR does)
-3. Changes Made (technical details of the implementation)
-4. How to Test (step-by-step instructions for reviewers)
-5. Screenshots (placeholder for before/after screenshots if applicable)
-6. Related Issues (reference to the original issue)
-7. Checklist (items to verify before merging)
-
-Format your response as a markdown template that can be directly copied into a GitHub PR description. Use appropriate markdown formatting including headers, lists, and code blocks where relevant.
+    
+    Create a comprehensive PR template with the following sections:
+    1. Title (a clear, concise title for the PR)
+    2. Description (summary of what the PR does)
+    3. Changes Made (technical details of the implementation)
+    4. How to Test (step-by-step instructions for reviewers)
+    5. Screenshots (placeholder for before/after screenshots if applicable)
+    6. Related Issues (reference to the original issue)
+    7. Checklist (items to verify before merging)
+    
+    Format your response as a markdown template that can be directly copied into a GitHub PR description. Use appropriate markdown formatting including       headers, lists, and code blocks where relevant.
 
 
 ## Example Input
