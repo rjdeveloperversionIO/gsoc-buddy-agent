@@ -42,7 +42,7 @@ Provide your recommendations as a JSON object with the following structure:
       "title": "resource title",
       "type": "resource type",
       "url": "URL or description",
-      "time_estimate": estimated hours to complete,
+      "time_estimate": "estimated hours to complete",
       "difficulty": "beginner/intermediate/advanced",
       "why_recommended": "brief explanation"
     }
