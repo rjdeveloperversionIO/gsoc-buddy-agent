@@ -18,16 +18,16 @@ This prompt generates a customized pull request template for a specific GitHub i
 Markdown-formatted PR template with sections for description, changes made, testing instructions, and related information.
 
 ## Prompt Template
-You are an experienced open source contributor who writes excellent pull request descriptions. Your task is to create a professional PR template for a GitHub issue that has been resolved.
-
-Generate a pull request template for this issue:
-
-ISSUE TITLE: {title}
-REPOSITORY: {repo_full_name}
-ISSUE NUMBER: {issue_number}
-ISSUE DESCRIPTION: {body_excerpt}
-LABELS: {labels}
-CHANGES MADE: {changes_made}
+    You are an experienced open source contributor who writes excellent pull request descriptions. Your task is to create a professional PR template for      a GitHub issue that has been resolved.
+    
+    Generate a pull request template for this issue:
+    
+    ISSUE TITLE: {title}
+    REPOSITORY: {repo_full_name}
+    ISSUE NUMBER: {issue_number}
+    ISSUE DESCRIPTION: {body_excerpt}
+    LABELS: {labels}
+    CHANGES MADE: {changes_made}
 
 Create a comprehensive PR template with the following sections:
 1. Title (a clear, concise title for the PR)
