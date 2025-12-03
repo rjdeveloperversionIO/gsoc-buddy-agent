@@ -16,8 +16,8 @@ GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
 # Models
-GEMINI_MODEL = "gemini-pro"
-GROQ_MODEL = "llama3-8b-8192"  # Using LLaMA 3 8B model
+GEMINI_MODEL = "gemini-2.0-flash"
+GROQ_MODEL = "llama-3.1-8b-instant"  # Using LLaMA 3 8B model
 GROQ_BACKUP_MODEL = "mixtral-8x7b-32768"  # Backup model if LLaMA has issues
 
 # Maximum retries
