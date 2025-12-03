@@ -20,14 +20,36 @@ def load_prompt_template(template_path: str) -> Optional[str]:
     try:
         with open(template_path, 'r', encoding='utf-8') as f:
             content = f.read()
-            
-        # Extract the prompt template section
-        prompt_match = re.search(r'## Prompt Template\s+```\s+(.*?)\s+```', content, re.DOTALL)
-        if prompt_match:
-            return prompt_match.group(1).strip()
-        else:
-            print(f"Error: Could not find prompt template section in {template_path}")
-            return None
+        
+        # Try different regex patterns to extract the prompt template
+        patterns = [
+            r'## Prompt Template\s+```\s+(.*?)\s+```',  # Standard format
+            r'## Prompt Template\s+```[a-z]*\s+(.*?)\s+```',  # With language identifier
+            r'## Prompt Template\s+(.*?)(?=##|\Z)',  # Everything until next heading or end
+        ]
+        
+        for pattern in patterns:
+            prompt_match = re.search(pattern, content, re.DOTALL)
+            if prompt_match:
+                return prompt_match.group(1).strip()
+        
+        # If no pattern matched, try a simpler approach - extract everything between "## Prompt Template" and the next heading
+        sections = re.split(r'##\s+', content)
+        for i, section in enumerate(sections):
+            if section.strip().startswith('Prompt Template'):
+                # Get the content after "Prompt Template" heading
+                template_content = section[len('Prompt Template'):].strip()
+                
+                # Try to extract just the content between code blocks if they exist
+                code_block_match = re.search(r'```(?:.*?)\s+(.*?)\s+```', template_content, re.DOTALL)
+                if code_block_match:
+                    return code_block_match.group(1).strip()
+                
+                # Otherwise return everything until the next heading or end
+                return template_content
+        
+        print(f"Error: Could not find prompt template section in {template_path}")
+        return None
     except Exception as e:
         print(f"Error loading prompt template from {template_path}: {str(e)}")
         return None
