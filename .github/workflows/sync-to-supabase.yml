@@ -22,8 +22,23 @@ jobs:
       
       - name: Create service account key file
         run: |
-          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT_KEY }}' > service_account_raw.json
-          cat service_account_raw.json > service_account.json
+          # Install jq for JSON validation
+          sudo apt-get update
+          sudo apt-get install -y jq
+          
+          # Write the secret to a file
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT }}' > service_account_raw.txt
+          
+          # Ensure it's valid JSON by removing any extra characters
+          cat service_account_raw.txt | tr -d '\r' > service_account.json
+          
+          # Check if it's valid JSON
+          if ! jq . service_account.json &>/dev/null; then
+            echo "Error: Invalid JSON in service account key"
+            echo "First few characters:"
+            head -c 20 service_account.json
+            exit 1
+          fi
       
       - name: Sync data to Supabase
         env:
