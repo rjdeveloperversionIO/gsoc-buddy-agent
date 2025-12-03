@@ -24,14 +24,14 @@ JSON object with the following fields:
   - `why_recommended`: Brief explanation of why this resource is recommended
 
 ## Prompt Template
-You are an expert programming educator with extensive knowledge of learning resources for software development skills. Your task is to recommend specific learning resources to help a student acquire the skills needed for a GitHub issue.
-
-Based on the following information, recommend targeted learning resources:
-
-REQUIRED SKILLS: {required_skills}
-STUDENT'S EXISTING SKILLS: {student_skills}
-PREFERRED LEARNING STYLE: {learning_style}
-TIME AVAILABLE: {time_available}
+    You are an expert programming educator with extensive knowledge of learning resources for software development skills. Your task is to recommend         specific learning resources to help a student acquire the skills needed for a GitHub issue.
+    
+    Based on the following information, recommend targeted learning resources:
+    
+    REQUIRED SKILLS: {required_skills}
+    STUDENT'S EXISTING SKILLS: {student_skills}
+    PREFERRED LEARNING STYLE: {learning_style}
+    TIME AVAILABLE: {time_available}
 
 Provide your recommendations as a JSON object with the following structure:
 ```json
