@@ -1,0 +1,406 @@
+name: Student-Issue Matcher
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+  schedule:
+    - cron: '0 */8 * * *'  # Run every 8 hours
+
+jobs:
+  match-students-issues:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pandas gspread oauth2client
+      
+      - name: Create service account key file
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT }}' > service_account.json
+      
+      - name: Run matching algorithm
+        run: |
+          cat > run_matcher.py << 'EOF'
+          import os
+          import sys
+          import json
+          import time
+          from datetime import datetime
+          import gspread
+          from oauth2client.service_account import ServiceAccountCredentials
+          
+          # Add scripts directory to path
+          sys.path.append('scripts')
+          from matching_algorithm import MatchingAlgorithm
+          
+          def get_student_full_profile(student_data, skills_data, target_orgs_data, contributions_data, preferences_data):
+              """
+              Build a complete student profile from individual data sources
+              
+              Args:
+                  student_data: Basic student data dictionary
+                  skills_data: All skills data
+                  target_orgs_data: All target orgs data
+                  contributions_data: All contributions data
+                  preferences_data: All preferences data
+                  
+              Returns:
+                  Complete student profile dictionary
+              """
+              student_id = student_data.get('student_id')
+              
+              # Filter skills for this student
+              student_skills = [
+                  skill for skill in skills_data 
+                  if skill.get('student_id') == student_id
+              ]
+              
+              # Filter target orgs for this student
+              student_target_orgs = [
+                  org for org in target_orgs_data 
+                  if org.get('student_id') == student_id
+              ]
+              
+              # Filter contributions for this student
+              student_contributions = [
+                  contrib for contrib in contributions_data 
+                  if contrib.get('student_id') == student_id
+              ]
+              
+              # Filter preferences for this student
+              student_preferences = {
+                  pref.get('preference_key'): pref.get('preference_value')
+                  for pref in preferences_data 
+                  if pref.get('student_id') == student_id
+              }
+              
+              # Build complete profile
+              profile = dict(student_data)
+              profile['skills'] = student_skills
+              profile['target_orgs'] = student_target_orgs
+              profile['contributions'] = student_contributions
+              profile['preferences'] = student_preferences
+              
+              return profile
+          
+          def get_issue_full_data(issue_data, analyzed_issues_data):
+              """
+              Build a complete issue data from raw and analyzed data
+              
+              Args:
+                  issue_data: Raw issue data dictionary
+                  analyzed_issues_data: All analyzed issues data
+                  
+              Returns:
+                  Complete issue data dictionary
+              """
+              issue_id = issue_data.get('issue_id')
+              
+              # Find analyzed data for this issue
+              analyzed_data = next(
+                  (issue for issue in analyzed_issues_data 
+                   if issue.get('issue_id') == issue_id),
+                  {}
+              )
+              
+              # Merge raw and analyzed data
+              full_issue = dict(issue_data)
+              
+              # Add analyzed fields if available
+              if analyzed_data:
+                  full_issue['difficulty_score'] = analyzed_data.get('difficulty_score', 5)
+                  full_issue['required_skills'] = analyzed_data.get('required_skills', '').split(',') if analyzed_data.get('required_skills') else []
+                  full_issue['estimated_time_hours'] = analyzed_data.get('estimated_time_hours', 10)
+                  full_issue['beginner_friendly'] = analyzed_data.get('beginner_friendly', True)
+                  full_issue['competition_level'] = analyzed_data.get('competition_level', 50)
+                  full_issue['strategic_value'] = analyzed_data.get('strategic_value', 50)
+              else:
+                  # Default values if not analyzed yet
+                  full_issue['difficulty_score'] = 5
+                  full_issue['required_skills'] = []
+                  full_issue['estimated_time_hours'] = 10
+                  full_issue['beginner_friendly'] = True
+                  full_issue['competition_level'] = 50
+                  full_issue['strategic_value'] = 50
+              
+              # Extract primary language from labels or repo name
+              labels = issue_data.get('labels', '').split(',') if issue_data.get('labels') else []
+              language_labels = ['python', 'javascript', 'java', 'c++', 'c#', 'go', 'rust', 'ruby', 'php', 'typescript', 'swift', 'kotlin']
+              primary_language = next(
+                  (label for label in labels if label.lower() in language_labels),
+                  ''
+              )
+              full_issue['primary_language'] = primary_language
+              
+              return full_issue
+          
+          def run_matcher():
+              """Run the student-issue matching process"""
+              print("Starting student-issue matching process...")
+              print(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+              
+              # Configure Google Sheets API
+              scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+              credentials = ServiceAccountCredentials.from_json_keyfile_name('service_account.json', scope)
+              gc = gspread.authorize(credentials)
+              
+              # Open the spreadsheet
+              spreadsheet = gc.open_by_key('19PfXdNw--raP07c3tLzOBYcAC44-AfPeM-nxI8t4cKA')
+              
+              # Get configuration
+              try:
+                  config_sheet = spreadsheet.worksheet('Config')
+                  config_data = config_sheet.get_all_records()
+                  config = {item.get('config_key'): item.get('value') for item in config_data if item.get('config_key')}
+              except Exception as e:
+                  print(f"Error reading config: {str(e)}")
+                  config = {}
+              
+              # Determine GSoC phase for weight adjustment
+              gsoc_phase = config.get('gsoc_phase', 'middle')
+              print(f"Current GSoC phase: {gsoc_phase}")
+              
+              # Create matching algorithm with appropriate weights
+              matcher = MatchingAlgorithm()
+              try:
+                  matcher.adjust_weights_for_gsoc_phase(gsoc_phase)
+              except ValueError:
+                  print(f"Unknown GSoC phase '{gsoc_phase}', using default weights")
+              
+              # Get students
+              print("Loading student data...")
+              try:
+                  students_sheet = spreadsheet.worksheet('Students')
+                  students_data = students_sheet.get_all_records()
+              except Exception as e:
+                  print(f"Error reading students: {str(e)}")
+                  students_data = []
+              
+              # Filter for active students only
+              active_students = [
+                  s for s in students_data 
+                  if s.get('is_active') in [True, 'TRUE', 'true', 'True']
+              ]
+              print(f"Found {len(active_students)} active students")
+              
+              if not active_students:
+                  print("No active students found. Exiting.")
+                  return
+              
+              # Get student skills
+              try:
+                  skills_sheet = spreadsheet.worksheet('Student_Skills')
+                  skills_data = skills_sheet.get_all_records()
+              except Exception as e:
+                  print(f"Error reading skills: {str(e)}")
+                  skills_data = []
+              
+              # Get student target orgs
+              try:
+                  target_orgs_sheet = spreadsheet.worksheet('Student_Target_Orgs')
+                  target_orgs_data = target_orgs_sheet.get_all_records()
+              except Exception as e:
+                  print(f"Error reading target orgs: {str(e)}")
+                  target_orgs_data = []
+              
+              # Get student contributions
+              try:
+                  contributions_sheet = spreadsheet.worksheet('Student_Contributions')
+                  contributions_data = contributions_sheet.get_all_records()
+              except Exception as e:
+                  print(f"Error reading contributions: {str(e)}")
+                  contributions_data = []
+              
+              # Get student preferences
+              try:
+                  preferences_sheet = spreadsheet.worksheet('Student_Preferences')
+                  preferences_data = preferences_sheet.get_all_records()
+              except Exception as e:
+                  print(f"Error reading preferences: {str(e)}")
+                  preferences_data = []
+              
+              # Get raw issues
+              print("Loading issue data...")
+              try:
+                  raw_issues_sheet = spreadsheet.worksheet('Raw_Issues')
+                  raw_issues_data = raw_issues_sheet.get_all_records()
+              except Exception as e:
+                  print(f"Error reading raw issues: {str(e)}")
+                  raw_issues_data = []
+              
+              # Filter for open issues only
+              open_issues = [
+                  issue for issue in raw_issues_data 
+                  if issue.get('state') == 'open'
+              ]
+              print(f"Found {len(open_issues)} open issues")
+              
+              if not open_issues:
+                  print("No open issues found. Exiting.")
+                  return
+              
+              # Get analyzed issues
+              try:
+                  analyzed_issues_sheet = spreadsheet.worksheet('Analyzed_Issues')
+                  analyzed_issues_data = analyzed_issues_sheet.get_all_records()
+              except Exception as e:
+                  print(f"Error reading analyzed issues: {str(e)}")
+                  analyzed_issues_data = []
+              
+              # Build complete student profiles
+              print("Building complete student profiles...")
+              student_profiles = []
+              for student in active_students:
+                  profile = get_student_full_profile(
+                      student, 
+                      skills_data, 
+                      target_orgs_data, 
+                      contributions_data, 
+                      preferences_data
+                  )
+                  student_profiles.append(profile)
+              
+              # Build complete issue data
+              print("Building complete issue data...")
+              issue_data_list = []
+              for issue in open_issues:
+                  full_issue = get_issue_full_data(issue, analyzed_issues_data)
+                  issue_data_list.append(full_issue)
+              
+              # Run matching for each student
+              print("Running matching algorithm...")
+              all_matches = []
+              matches_per_student = int(config.get('matches_per_student', 5))
+              
+              for student_profile in student_profiles:
+                  student_id = student_profile.get('student_id')
+                  student_name = student_profile.get('display_name', 'Unknown')
+                  
+                  print(f"Finding matches for {student_name} ({student_id})...")
+                  
+                  try:
+                      matches = matcher.find_matches(
+                          student_profile, 
+                          issue_data_list, 
+                          limit=matches_per_student
+                      )
+                      
+                      for match in matches:
+                          match['student_name'] = student_name
+                          match['matched_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                          all_matches.append(match)
+                      
+                      print(f"  Found {len(matches)} matches")
+                  except Exception as e:
+                      print(f"  Error finding matches: {str(e)}")
+              
+              # Create or get Student_Matches sheet
+              print("Saving match results...")
+              try:
+                  try:
+                      matches_sheet = spreadsheet.worksheet('Student_Matches')
+                  except gspread.exceptions.WorksheetNotFound:
+                      # Create the sheet if it doesn't exist
+                      matches_sheet = spreadsheet.add_worksheet(
+                          title='Student_Matches', 
+                          rows=1000, 
+                          cols=15
+                      )
+                      # Add headers
+                      headers = [
+                          'match_id', 'student_id', 'student_name', 'issue_id',
+                          'match_score', 'match_category', 'skill_alignment',
+                          'difficulty_fit', 'org_fit', 'time_fit', 'strategic_value',
+                          'explanation', 'matched_at', 'notified', 'feedback'
+                      ]
+                      matches_sheet.append_row(headers)
+                  
+                  # Clear old matches (keep header)
+                  all_values = matches_sheet.get_all_values()
+                  if len(all_values) > 1:
+                      matches_sheet.batch_clear([f'A2:O{len(all_values)}'])
+                  
+                  # Add new matches
+                  rows_to_add = []
+                  for i, match in enumerate(all_matches):
+                      match_id = f"MATCH-{datetime.now().strftime('%Y%m%d')}-{i+1:04d}"
+                      
+                      row = [
+                          match_id,
+                          match.get('student_id', ''),
+                          match.get('student_name', ''),
+                          match.get('issue_id', ''),
+                          match.get('match_score', 0),
+                          match.get('match_category', ''),
+                          match.get('component_scores', {}).get('skill_alignment', 0),
+                          match.get('component_scores', {}).get('difficulty_fit', 0),
+                          match.get('component_scores', {}).get('org_fit', 0),
+                          match.get('component_scores', {}).get('time_fit', 0),
+                          match.get('component_scores', {}).get('strategic_value', 0),
+                          match.get('explanation', '')[:500],  # Truncate long explanations
+                          match.get('matched_at', ''),
+                          'FALSE',  # notified
+                          ''  # feedback
+                      ]
+                      rows_to_add.append(row)
+                  
+                  if rows_to_add:
+                      matches_sheet.append_rows(rows_to_add)
+                      print(f"Saved {len(rows_to_add)} matches to sheet")
+                  else:
+                      print("No matches to save")
+                  
+              except Exception as e:
+                  print(f"Error saving matches: {str(e)}")
+              
+              # Update config with last match run time
+              try:
+                  config_sheet.update_cell(
+                      next(i+1 for i, item in enumerate(config_sheet.get_all_values()) 
+                           if item and item[0] == 'last_match_run'),
+                      2,
+                      datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                  )
+              except Exception as e:
+                  # Add the config if it doesn't exist
+                  try:
+                      config_sheet.append_row(['last_match_run', datetime.now().strftime('%Y-%m-%d %H:%M:%S')])
+                  except:
+                      pass
+              
+              # Print summary
+              print("\n=== Matching Summary ===")
+              print(f"Total students processed: {len(student_profiles)}")
+              print(f"Total issues considered: {len(issue_data_list)}")
+              print(f"Total matches generated: {len(all_matches)}")
+              
+              # Count matches by category
+              categories = {}
+              for match in all_matches:
+                  category = match.get('match_category', 'Unknown')
+                  categories[category] = categories.get(category, 0) + 1
+              
+              print("\nMatches by category:")
+              for category, count in sorted(categories.items(), key=lambda x: x[1], reverse=True):
+                  print(f"  {category}: {count}")
+              
+              print("\nStudent-issue matching process completed successfully!")
+          
+          if __name__ == "__main__":
+              run_matcher()
+          EOF
+          
+          python run_matcher.py
+      
+      - name: Clean up
+        run: |
+          rm service_account.json
+          rm run_matcher.py
