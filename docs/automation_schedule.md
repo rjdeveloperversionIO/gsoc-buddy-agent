@@ -51,55 +51,51 @@ This document outlines the automation schedule for the GSoC Buddy agent, includi
                         │ Interaction     │
                         └─────────────────┘
 ```
-Resource Optimization Strategies
+# Resource Optimization Strategies
 
-1. API Rate Limit Management
+## API Rate Limit Management
+- Track remaining rate limits in each API response
+- Implement exponential backoff for retries
+- Distribute API-intensive tasks throughout the day
+- Cache responses where appropriate
 
-        Track remaining rate limits in each API response
-        Implement exponential backoff for retries
-        Distribute API-intensive tasks throughout the day
-        Cache responses where appropriate
+## Batch Processing
+- Group similar API calls together
+- Process issues in batches of 50
+- Bulk update database records
+- Combine notifications when possible
 
-2. Batch Processing
+## Incremental Updates
+- Only scan repositories with recent activity
+- Only update changed issue statuses
+- Prioritize active students and organizations
 
-        Group similar API calls together
-        Process issues in batches of 50
-        Bulk update database records
-        Combine notifications when possible
+## Parallel Processing
+- Run independent workflows in parallel
+- Split large scans into multiple smaller jobs
+- Use concurrent API requests where supported
 
-3. Incremental Updates
-        
-        Only scan repositories with recent activity
-        Only update changed issue statuses
-        Prioritize active students and organizations
+# Manual Override Triggers
 
-4.Parallel Processing
+All automated workflows can also be triggered manually through:
+- GitHub Actions UI (Run workflow button)
+- Bot commands (e.g., `/scan`, `/match`, `/digest`)
+- Admin dashboard
 
-      Run independent workflows in parallel
-      Split large scans into multiple smaller jobs
-      Use concurrent API requests where supported
+# Monitoring and Alerts
 
-Manual Override Triggers
-    
-    All automated workflows can also be triggered manually through:
-    
-    GitHub Actions UI (Run workflow button)
-    Bot commands (e.g., /scan, /match, /digest)
-    Admin dashboard
+- Failed workflow runs trigger email notifications
+- Rate limit warnings sent to admin Telegram chat
+- Daily health report summarizes all workflow executions
+- Error logs stored in dedicated worksheet
 
-Monitoring and Alerts
-    
-    Failed workflow runs trigger email notifications
-    Rate limit warnings sent to admin Telegram chat
-    Daily health report summarizes all workflow executions
-    Error logs stored in dedicated worksheet
+# GSoC Phase-Specific Adjustments
 
-GSoC Phase-Specific Adjustments
-    
-    Phase	Date Range	Scanner Frequency	Matcher Frequency	Notification Strategy
-    Pre-announcement	Before Feb	12 hours	24 hours	Weekly digest only
-    Organization Announcement	Feb-Mar	6 hours	12 hours	Daily digest + high priority
-    Student Application	Mar-Apr	6 hours	8 hours	Daily digest + all matches
-    Project Acceptance	May	6 hours	8 hours	Daily digest + high priority
-    Coding Period	Jun-Aug	6 hours	12 hours	Daily digest + high priority
-    Wrap-up	Sep	12 hours	24 hours	Weekly digest only
+| Phase | Date Range | Scanner Frequency | Matcher Frequency | Notification Strategy |
+|-------|------------|-------------------|-------------------|------------------------|
+| Pre-announcement | Before Feb | 12 hours | 24 hours | Weekly digest only |
+| Organization Announcement | Feb-Mar | 6 hours | 12 hours | Daily digest + high priority |
+| Student Application | Mar-Apr | 6 hours | 8 hours | Daily digest + all matches |
+| Project Acceptance | May | 6 hours | 8 hours | Daily digest + high priority |
+| Coding Period | Jun-Aug | 6 hours | 12 hours | Daily digest + high priority |
+| Wrap-up | Sep | 12 hours | 24 hours | Weekly digest only |
