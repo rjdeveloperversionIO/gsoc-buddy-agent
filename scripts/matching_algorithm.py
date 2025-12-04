@@ -747,7 +747,7 @@ class MatchingAlgorithm:
         # Extract from skills
         for skill in student.get('skills', []):
             skill_name = skill.get('skill_name', '').lower()
-            for domain, keywords in domain_keywords
+            for domain, keywords in domain_keywords:
             for domain, keywords in domain_keywords.items():
                 if any(keyword in skill_name for keyword in keywords):
                     domains.add(domain)
