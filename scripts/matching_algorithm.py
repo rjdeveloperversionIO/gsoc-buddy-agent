@@ -405,7 +405,7 @@ class MatchingAlgorithm:
         else:
             return "Poor Match"
     
-        def _generate_explanation(self, student: Dict[str, Any], issue: Dict[str, Any],
+    def _generate_explanation(self, student: Dict[str, Any], issue: Dict[str, Any],
                              skill_score: float, difficulty_score: float,
                              org_score: float, time_score: float, strategic_score: float,
                              final_score: float) -> str:
