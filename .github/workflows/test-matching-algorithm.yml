@@ -1,0 +1,24 @@
+name: Test Matching Algorithm
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+  push:
+    paths:
+      - 'scripts/matching_algorithm.py'
+      - 'scripts/test_matching_algorithm.py'
+
+jobs:
+  test-algorithm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Test matching algorithm
+        run: |
+          python scripts/test_matching_algorithm.py
