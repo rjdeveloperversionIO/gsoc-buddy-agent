@@ -1,0 +1,491 @@
+name: Daily Digest Generator
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+  schedule:
+    - cron: '0 17 * * *'  # Run daily at 5 PM UTC
+
+jobs:
+  generate-digest:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests gspread oauth2client
+      
+      - name: Create service account key file
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT }}' > service_account.json
+      
+      - name: Generate daily digests
+        env:
+          GOOGLE_SHEETS_ID: ${{ secrets.GOOGLE_SHEETS_ID }}
+        run: |
+          cat > generate_digest.py << 'PYTHON_SCRIPT'
+          import os
+          import sys
+          import gspread
+          from oauth2client.service_account import ServiceAccountCredentials
+          from datetime import datetime, timedelta
+          import time
+          
+          class DigestGenerator:
+              """Daily digest generator for GSoC Buddy Agent"""
+              
+              def __init__(self):
+                  self.gc = None
+                  self.spreadsheet = None
+              
+              def connect_to_sheets(self):
+                  """Initialize Google Sheets connection"""
+                  scope = [
+                      'https://spreadsheets.google.com/feeds',
+                      'https://www.googleapis.com/auth/drive'
+                  ]
+                  credentials = ServiceAccountCredentials.from_json_keyfile_name(
+                      'service_account.json', scope
+                  )
+                  self.gc = gspread.authorize(credentials)
+                  
+                  spreadsheet_id = os.environ.get('GOOGLE_SHEETS_ID')
+                  if not spreadsheet_id:
+                      raise ValueError("GOOGLE_SHEETS_ID environment variable not set")
+                  
+                  print(f"   Spreadsheet ID: {spreadsheet_id[:20]}...")
+                  self.spreadsheet = self.gc.open_by_key(spreadsheet_id)
+                  return True
+              
+              def get_active_students(self):
+                  """Get all active students from the Students sheet"""
+                  try:
+                      students_sheet = self.spreadsheet.worksheet('Students')
+                      students_data = students_sheet.get_all_records()
+                      
+                      active_students = []
+                      for student in students_data:
+                          is_active = student.get('is_active', '')
+                          if is_active in [True, 'TRUE', 'true', 'True', 1, '1', 'yes', 'Yes']:
+                              active_students.append(student)
+                      
+                      return active_students
+                  except gspread.exceptions.WorksheetNotFound:
+                      print("   ⚠️  Students sheet not found")
+                      return []
+                  except Exception as e:
+                      print(f"   Error getting students: {e}")
+                      return []
+              
+              def get_recent_matches(self, student_id, hours=24):
+                  """Get matches created in the last X hours for a student"""
+                  try:
+                      matches_sheet = self.spreadsheet.worksheet('Matches')
+                      matches_data = matches_sheet.get_all_records()
+                      
+                      cutoff_time = datetime.utcnow() - timedelta(hours=hours)
+                      recent_matches = []
+                      
+                      for match in matches_data:
+                          if str(match.get('student_id', '')) != str(student_id):
+                              continue
+                          
+                          created_at = match.get('created_at', '')
+                          if created_at:
+                              try:
+                                  match_time_str = str(created_at).replace('Z', '').replace('+00:00', '')
+                                  if 'T' in match_time_str:
+                                      match_time = datetime.fromisoformat(match_time_str[:19])
+                                  else:
+                                      match_time = datetime.strptime(match_time_str[:19], '%Y-%m-%d %H:%M:%S')
+                                  
+                                  if match_time > cutoff_time:
+                                      recent_matches.append(match)
+                              except:
+                                  recent_matches.append(match)
+                          else:
+                              recent_matches.append(match)
+                      
+                      # Sort by match score (highest first)
+                      recent_matches.sort(
+                          key=lambda x: float(x.get('match_score', 0) or 0),
+                          reverse=True
+                      )
+                      
+                      return recent_matches
+                      
+                  except gspread.exceptions.WorksheetNotFound:
+                      print("   ℹ️  Matches sheet not found")
+                      return []
+                  except Exception as e:
+                      print(f"   Error getting matches: {e}")
+                      return []
+              
+              def get_all_matches_for_student(self, student_id):
+                  """Get all matches for a student (not just recent)"""
+                  try:
+                      matches_sheet = self.spreadsheet.worksheet('Matches')
+                      matches_data = matches_sheet.get_all_records()
+                      
+                      student_matches = [
+                          m for m in matches_data
+                          if str(m.get('student_id', '')) == str(student_id)
+                      ]
+                      
+                      # Sort by match score (highest first)
+                      student_matches.sort(
+                          key=lambda x: float(x.get('match_score', 0) or 0),
+                          reverse=True
+                      )
+                      
+                      return student_matches
+                      
+                  except gspread.exceptions.WorksheetNotFound:
+                      return []
+                  except Exception as e:
+                      return []
+              
+              def get_issue_details(self, issue_id):
+                  """Get details for a specific issue"""
+                  try:
+                      issues_sheet = self.spreadsheet.worksheet('Issues')
+                      issues_data = issues_sheet.get_all_records()
+                      
+                      for issue in issues_data:
+                          if str(issue.get('issue_id', '')) == str(issue_id):
+                              return issue
+                      
+                      return None
+                  except Exception as e:
+                      return None
+              
+              def get_student_contributions(self, student_id):
+                  """Get contribution statistics for a student"""
+                  try:
+                      contributions_sheet = self.spreadsheet.worksheet('Contributions')
+                      contributions_data = contributions_sheet.get_all_records()
+                      
+                      student_contributions = [
+                          c for c in contributions_data
+                          if str(c.get('student_id', '')) == str(student_id)
+                      ]
+                      
+                      total = len(student_contributions)
+                      merged = len([c for c in student_contributions if c.get('status') == 'merged'])
+                      pending = len([c for c in student_contributions if c.get('status') == 'pending'])
+                      
+                      return {
+                          'total': total,
+                          'merged': merged,
+                          'pending': pending,
+                          'success_rate': round((merged / total * 100) if total > 0 else 0, 1)
+                      }
+                      
+                  except gspread.exceptions.WorksheetNotFound:
+                      return {'total': 0, 'merged': 0, 'pending': 0, 'success_rate': 0}
+                  except Exception as e:
+                      return {'total': 0, 'merged': 0, 'pending': 0, 'success_rate': 0}
+              
+              def generate_digest_text(self, student, matches, contributions):
+                  """Generate human-readable digest text"""
+                  student_name = student.get('display_name', '') or student.get('github_username', '') or 'Student'
+                  
+                  # Categorize matches
+                  perfect = [m for m in matches if m.get('match_category') == 'Perfect Match']
+                  strong = [m for m in matches if m.get('match_category') == 'Strong Match']
+                  good = [m for m in matches if m.get('match_category') == 'Good Match']
+                  
+                  lines = []
+                  lines.append("=" * 50)
+                  lines.append("🎯 GSoC BUDDY DAILY DIGEST")
+                  lines.append(f"📅 {datetime.utcnow().strftime('%B %d, %Y')}")
+                  lines.append(f"👤 {student_name}")
+                  lines.append("=" * 50)
+                  
+                  # Summary
+                  lines.append("")
+                  lines.append("📊 TODAY'S SUMMARY")
+                  lines.append("-" * 30)
+                  lines.append(f"  • New Matches Found: {len(matches)}")
+                  
+                  if len(perfect) > 0:
+                      lines.append(f"  • 🌟 Perfect Matches: {len(perfect)}")
+                  if len(strong) > 0:
+                      lines.append(f"  • ⭐ Strong Matches: {len(strong)}")
+                  if len(good) > 0:
+                      lines.append(f"  • ✓ Good Matches: {len(good)}")
+                  
+                  # Progress
+                  lines.append("")
+                  lines.append("📈 YOUR PROGRESS")
+                  lines.append("-" * 30)
+                  lines.append(f"  • Total Contributions: {contributions['total']}")
+                  lines.append(f"  • Merged PRs: {contributions['merged']}")
+                  lines.append(f"  • Pending PRs: {contributions['pending']}")
+                  lines.append(f"  • Success Rate: {contributions['success_rate']}%")
+                  
+                  # Top Recommendations
+                  if matches:
+                      lines.append("")
+                      lines.append("🎯 TOP RECOMMENDATIONS")
+                      lines.append("-" * 30)
+                      
+                      for i, match in enumerate(matches[:5], 1):
+                          issue_id = match.get('issue_id', '')
+                          issue = self.get_issue_details(issue_id)
+                          
+                          category = match.get('match_category', '')
+                          emoji = {
+                              'Perfect Match': '🌟',
+                              'Strong Match': '⭐',
+                              'Good Match': '✓',
+                              'Potential Match': '○'
+                          }.get(category, '•')
+                          
+                          if issue:
+                              title = str(issue.get('title', 'Unknown'))[:45]
+                              org = issue.get('org_name', '') or issue.get('organization', '') or 'Unknown'
+                              url = issue.get('issue_url', '') or issue.get('url', '')
+                          else:
+                              title = 'Unknown Issue'
+                              org = 'Unknown'
+                              url = ''
+                          
+                          score = match.get('match_score', 0)
+                          
+                          lines.append(f"")
+                          lines.append(f"  {i}. {emoji} {title}...")
+                          lines.append(f"     Org: {org}")
+                          lines.append(f"     Score: {score}/100 ({category})")
+                          
+                          if url:
+                              lines.append(f"     Link: {url}")
+                  else:
+                      lines.append("")
+                      lines.append("💡 No new matches today.")
+                      lines.append("   Keep building your skills and check back tomorrow!")
+                  
+                  # Actions
+                  lines.append("")
+                  lines.append("📝 RECOMMENDED ACTIONS")
+                  lines.append("-" * 30)
+                  
+                  action_num = 1
+                  if len(perfect) > 0:
+                      lines.append(f"  {action_num}. 🔥 CHECK PERFECT MATCHES NOW!")
+                      action_num += 1
+                  
+                  if contributions['pending'] > 0:
+                      lines.append(f"  {action_num}. 👀 Follow up on {contributions['pending']} pending PR(s)")
+                      action_num += 1
+                  
+                  if contributions['total'] < 3:
+                      lines.append(f"  {action_num}. 🚀 Start with a 'good first issue'")
+                  elif contributions['merged'] < 3:
+                      lines.append(f"  {action_num}. 🎯 Aim for {3 - contributions['merged']} more merged PRs")
+                  
+                  lines.append("")
+                  lines.append("=" * 50)
+                  lines.append("💪 Keep contributing! You're doing great!")
+                  lines.append("=" * 50)
+                  
+                  return "\n".join(lines)
+              
+              def save_digest(self, student, matches, contributions, digest_text):
+                  """Save digest to the Digests sheet"""
+                  try:
+                      # Get or create Digests sheet
+                      try:
+                          digests_sheet = self.spreadsheet.worksheet('Digests')
+                      except gspread.exceptions.WorksheetNotFound:
+                          digests_sheet = self.spreadsheet.add_worksheet(
+                              title='Digests',
+                              rows=1000,
+                              cols=10
+                          )
+                          headers = [
+                              'digest_id', 'student_id', 'student_name',
+                              'generated_at', 'new_matches_count', 'perfect_matches',
+                              'strong_matches', 'digest_text', 'is_sent', 'sent_via'
+                          ]
+                          digests_sheet.update('A1:J1', [headers])
+                      
+                      # Calculate counts
+                      perfect_count = len([m for m in matches if m.get('match_category') == 'Perfect Match'])
+                      strong_count = len([m for m in matches if m.get('match_category') == 'Strong Match'])
+                      
+                      # Create row
+                      student_id = student.get('student_id', '')
+                      student_name = student.get('display_name', '') or student.get('github_username', '')
+                      digest_id = f"digest_{student_id}_{int(datetime.utcnow().timestamp())}"
+                      
+                      row = [
+                          digest_id,
+                          student_id,
+                          student_name,
+                          datetime.utcnow().isoformat(),
+                          len(matches),
+                          perfect_count,
+                          strong_count,
+                          digest_text[:2000],
+                          'FALSE',
+                          ''
+                      ]
+                      
+                      digests_sheet.append_row(row)
+                      return True
+                      
+                  except Exception as e:
+                      print(f"   Error saving digest: {e}")
+                      return False
+              
+              def log_workflow_run(self, status, details):
+                  """Log the workflow run"""
+                  try:
+                      try:
+                          log_sheet = self.spreadsheet.worksheet('Workflow_Runs')
+                      except gspread.exceptions.WorksheetNotFound:
+                          log_sheet = self.spreadsheet.add_worksheet(
+                              title='Workflow_Runs',
+                              rows=1000,
+                              cols=6
+                          )
+                          log_sheet.update('A1:F1', [[
+                              'run_id', 'workflow_name', 'status',
+                              'details', 'started_at', 'completed_at'
+                          ]])
+                      
+                      run_id = f"digest_{int(datetime.utcnow().timestamp())}"
+                      row = [
+                          run_id,
+                          'Daily Digest Generator',
+                          status,
+                          details[:200],
+                          datetime.utcnow().isoformat(),
+                          datetime.utcnow().isoformat()
+                      ]
+                      log_sheet.append_row(row)
+                      
+                  except Exception as e:
+                      print(f"   Error logging workflow: {e}")
+              
+              def run(self):
+                  """Main function to generate all digests"""
+                  print("=" * 60)
+                  print("🗞️  DAILY DIGEST GENERATOR")
+                  print(f"📅 Time: {datetime.utcnow().isoformat()} UTC")
+                  print("=" * 60)
+                  
+                  try:
+                      # Connect
+                      print("\n[1/5] Connecting to Google Sheets...")
+                      self.connect_to_sheets()
+                      print(f"✅ Connected to: {self.spreadsheet.title}")
+                      
+                      # Get students
+                      print("\n[2/5] Loading active students...")
+                      students = self.get_active_students()
+                      print(f"✅ Found {len(students)} active students")
+                      
+                      if not students:
+                          print("\n⚠️  No active students found.")
+                          print("   This could mean:")
+                          print("   - No students in the Students sheet")
+                          print("   - No students have is_active = TRUE")
+                          self.log_workflow_run('COMPLETED', 'No active students found')
+                          return
+                      
+                      # Generate digests
+                      print("\n[3/5] Generating digests...")
+                      digests_created = 0
+                      total_matches = 0
+                      total_perfect = 0
+                      
+                      for student in students:
+                          student_id = student.get('student_id', '')
+                          student_name = student.get('display_name', '') or student.get('github_username', '') or student_id
+                          
+                          print(f"\n   📧 Processing: {student_name}")
+                          
+                          # Get recent matches (last 24 hours)
+                          matches = self.get_recent_matches(student_id, hours=24)
+                          
+                          # If no recent matches, get all matches for this student
+                          if not matches:
+                              matches = self.get_all_matches_for_student(student_id)[:10]
+                              if matches:
+                                  print(f"      Using {len(matches)} existing matches (no new ones)")
+                          
+                          # Get contributions
+                          contributions = self.get_student_contributions(student_id)
+                          
+                          # Generate digest text
+                          digest_text = self.generate_digest_text(student, matches, contributions)
+                          
+                          # Save digest
+                          if self.save_digest(student, matches, contributions, digest_text):
+                              digests_created += 1
+                              print(f"      ✅ Digest saved")
+                          
+                          # Track stats
+                          total_matches += len(matches)
+                          total_perfect += len([m for m in matches if m.get('match_category') == 'Perfect Match'])
+                          
+                          print(f"      📊 {len(matches)} matches, {contributions['total']} contributions")
+                          
+                          # Small delay to avoid rate limits
+                          time.sleep(0.5)
+                      
+                      # Log success
+                      print("\n[4/5] Logging workflow run...")
+                      details = f"Generated {digests_created} digests. Matches: {total_matches}, Perfect: {total_perfect}"
+                      self.log_workflow_run('SUCCESS', details)
+                      
+                      # Summary
+                      print("\n[5/5] Complete!")
+                      print("\n" + "=" * 60)
+                      print("✅ DIGEST GENERATION COMPLETED")
+                      print("=" * 60)
+                      print(f"   • Students processed: {len(students)}")
+                      print(f"   • Digests created: {digests_created}")
+                      print(f"   • Total matches included: {total_matches}")
+                      print(f"   • Perfect matches: {total_perfect}")
+                      print("=" * 60)
+                      
+                      # Print sample digest preview
+                      if digests_created > 0:
+                          print("\n📄 Digests have been saved to the 'Digests' sheet")
+                          print("   Students can now receive these via Telegram/Discord/Email")
+                      
+                  except Exception as e:
+                      print(f"\n❌ ERROR: {str(e)}")
+                      import traceback
+                      traceback.print_exc()
+                      
+                      try:
+                          self.log_workflow_run('FAILED', str(e)[:200])
+                      except:
+                          pass
+                      
+                      sys.exit(1)
+          
+          if __name__ == "__main__":
+              generator = DigestGenerator()
+              generator.run()
+          PYTHON_SCRIPT
+          
+          python generate_digest.py
+      
+      - name: Clean up
+        if: always()
+        run: |
+          rm -f service_account.json
+          rm -f generate_digest.py
