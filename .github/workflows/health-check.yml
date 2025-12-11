@@ -30,7 +30,7 @@ jobs:
       - name: Run health check
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          GOOGLE_SHEETS_ID: ${{ secrets.GOOGLE_SHEETS_ID }}
         run: |
           cat > health_check.py << 'PYTHON_SCRIPT'
           import os
@@ -78,12 +78,12 @@ jobs:
                       gc = gspread.authorize(credentials)
                       
                       # Get spreadsheet
-                      spreadsheet_id = os.environ.get('SPREADSHEET_ID')
+                      spreadsheet_id = os.environ.get('GOOGLE_SHEETS_ID')
                       if not spreadsheet_id:
-                          self.log_result("Spreadsheet ID", False, "SPREADSHEET_ID environment variable not set")
+                          self.log_result("Spreadsheet ID", False, "GOOGLE_SHEETS_ID environment variable not set")
                           return False
                       
-                      self.spreadsheet = gc.open_by_key(spreadsheet_id)
+                      self.spreadsheet = gc.open_by_key(google_sheet_id)
                       
                       # Verify we can read data
                       worksheets = self.spreadsheet.worksheets()
