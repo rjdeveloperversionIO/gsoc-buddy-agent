@@ -1,0 +1,490 @@
+name: System Health Check
+
+on:
+  workflow_dispatch:  # Allows manual triggering
+  schedule:
+    - cron: '0 */4 * * *'  # Run every 4 hours
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests gspread oauth2client
+      
+      - name: Create service account key file
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICE_ACCOUNT }}' > service_account.json
+      
+      - name: Run health check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+        run: |
+          cat > health_check.py << 'PYTHON_SCRIPT'
+          import os
+          import sys
+          import requests
+          import gspread
+          from oauth2client.service_account import ServiceAccountCredentials
+          from datetime import datetime, timedelta
+          
+          class HealthChecker:
+              """System health checker for GSoC Buddy Agent"""
+              
+              def __init__(self):
+                  self.results = []
+                  self.spreadsheet = None
+                  self.all_passed = True
+              
+              def log_result(self, check_name, passed, message):
+                  """Log a health check result"""
+                  status = "✅ PASS" if passed else "❌ FAIL"
+                  self.results.append({
+                      'check': check_name,
+                      'passed': passed,
+                      'message': message
+                  })
+                  print(f"{status} | {check_name}: {message}")
+                  if not passed:
+                      self.all_passed = False
+              
+              def check_google_sheets(self):
+                  """Check Google Sheets connectivity"""
+                  print("\n" + "=" * 50)
+                  print("[CHECK 1] GOOGLE SHEETS CONNECTION")
+                  print("=" * 50)
+                  
+                  try:
+                      # Initialize credentials
+                      scope = [
+                          'https://spreadsheets.google.com/feeds',
+                          'https://www.googleapis.com/auth/drive'
+                      ]
+                      credentials = ServiceAccountCredentials.from_json_keyfile_name(
+                          'service_account.json', scope
+                      )
+                      gc = gspread.authorize(credentials)
+                      
+                      # Get spreadsheet
+                      spreadsheet_id = os.environ.get('SPREADSHEET_ID')
+                      if not spreadsheet_id:
+                          self.log_result("Spreadsheet ID", False, "SPREADSHEET_ID environment variable not set")
+                          return False
+                      
+                      self.spreadsheet = gc.open_by_key(spreadsheet_id)
+                      
+                      # Verify we can read data
+                      worksheets = self.spreadsheet.worksheets()
+                      worksheet_names = [ws.title for ws in worksheets]
+                      
+                      self.log_result(
+                          "Google Sheets Connection", 
+                          True, 
+                          f"Connected to '{self.spreadsheet.title}' with {len(worksheets)} sheets"
+                      )
+                      
+                      # Check for required sheets
+                      required_sheets = ['Config', 'Organizations', 'Issues', 'Students']
+                      missing_sheets = [s for s in required_sheets if s not in worksheet_names]
+                      
+                      if missing_sheets:
+                          self.log_result(
+                              "Required Sheets",
+                              False,
+                              f"Missing sheets: {', '.join(missing_sheets)}"
+                          )
+                      else:
+                          self.log_result(
+                              "Required Sheets",
+                              True,
+                              f"All required sheets present: {', '.join(required_sheets)}"
+                          )
+                      
+                      print(f"\n   Available sheets: {', '.join(worksheet_names)}")
+                      return True
+                      
+                  except FileNotFoundError:
+                      self.log_result("Service Account", False, "service_account.json file not found")
+                      return False
+                  except Exception as e:
+                      self.log_result("Google Sheets Connection", False, f"Error: {str(e)}")
+                      return False
+              
+              def check_github_api(self):
+                  """Check GitHub API connectivity and rate limits"""
+                  print("\n" + "=" * 50)
+                  print("[CHECK 2] GITHUB API")
+                  print("=" * 50)
+                  
+                  try:
+                      github_token = os.environ.get('GITHUB_TOKEN', '')
+                      headers = {
+                          'Accept': 'application/vnd.github.v3+json',
+                          'User-Agent': 'GSoC-Buddy-Agent'
+                      }
+                      if github_token:
+                          headers['Authorization'] = f'token {github_token}'
+                      
+                      # Check rate limit endpoint
+                      response = requests.get(
+                          'https://api.github.com/rate_limit',
+                          headers=headers,
+                          timeout=10
+                      )
+                      
+                      if response.status_code == 200:
+                          data = response.json()
+                          core = data.get('resources', {}).get('core', {})
+                          remaining = core.get('remaining', 0)
+                          limit = core.get('limit', 0)
+                          reset_timestamp = core.get('reset', 0)
+                          reset_time = datetime.fromtimestamp(reset_timestamp)
+                          
+                          self.log_result(
+                              "GitHub API Connection",
+                              True,
+                              f"Connected successfully"
+                          )
+                          
+                          # Check rate limit status
+                          rate_limit_ok = remaining > 100
+                          self.log_result(
+                              "GitHub Rate Limit",
+                              rate_limit_ok,
+                              f"{remaining}/{limit} requests remaining (resets at {reset_time.strftime('%H:%M:%S UTC')})"
+                          )
+                          
+                          if remaining < 100:
+                              print(f"   ⚠️  WARNING: Rate limit is low!")
+                          
+                          return True
+                      else:
+                          self.log_result(
+                              "GitHub API Connection",
+                              False,
+                              f"Unexpected status code: {response.status_code}"
+                          )
+                          return False
+                          
+                  except requests.exceptions.Timeout:
+                      self.log_result("GitHub API Connection", False, "Request timed out")
+                      return False
+                  except Exception as e:
+                      self.log_result("GitHub API Connection", False, f"Error: {str(e)}")
+                      return False
+              
+              def check_data_freshness(self):
+                  """Check if data is being updated regularly"""
+                  print("\n" + "=" * 50)
+                  print("[CHECK 3] DATA FRESHNESS")
+                  print("=" * 50)
+                  
+                  if not self.spreadsheet:
+                      self.log_result("Data Freshness", False, "No spreadsheet connection")
+                      return False
+                  
+                  try:
+                      # Check Issues sheet
+                      try:
+                          issues_sheet = self.spreadsheet.worksheet('Issues')
+                          issues_data = issues_sheet.get_all_records()
+                          
+                          if issues_data:
+                              self.log_result(
+                                  "Issues Data",
+                                  True,
+                                  f"{len(issues_data)} issues in database"
+                              )
+                              
+                              # Check for recent scans (last 24 hours)
+                              recent_count = 0
+                              cutoff_time = datetime.utcnow() - timedelta(hours=24)
+                              
+                              for issue in issues_data[-100:]:  # Check last 100
+                                  scanned_at = issue.get('scanned_at', '') or issue.get('created_at', '')
+                                  if scanned_at:
+                                      try:
+                                          # Handle different date formats
+                                          scan_time_str = scanned_at.replace('Z', '').replace('+00:00', '')
+                                          if 'T' in scan_time_str:
+                                              scan_time = datetime.fromisoformat(scan_time_str)
+                                          else:
+                                              scan_time = datetime.strptime(scan_time_str[:19], '%Y-%m-%d %H:%M:%S')
+                                          
+                                          if scan_time > cutoff_time:
+                                              recent_count += 1
+                                      except:
+                                          pass
+                              
+                              if recent_count > 0:
+                                  self.log_result(
+                                      "Recent Issue Scans",
+                                      True,
+                                      f"{recent_count} issues scanned in last 24 hours"
+                                  )
+                              else:
+                                  self.log_result(
+                                      "Recent Issue Scans",
+                                      False,
+                                      "No issues scanned in last 24 hours - scanner may not be running"
+                                  )
+                          else:
+                              self.log_result("Issues Data", False, "No issues in database")
+                              
+                      except gspread.exceptions.WorksheetNotFound:
+                          self.log_result("Issues Sheet", False, "Issues sheet not found")
+                      
+                      # Check Students sheet
+                      try:
+                          students_sheet = self.spreadsheet.worksheet('Students')
+                          students_data = students_sheet.get_all_records()
+                          
+                          total_students = len(students_data)
+                          active_students = sum(
+                              1 for s in students_data
+                              if s.get('is_active') in [True, 'TRUE', 'true', 'True', 1, '1']
+                          )
+                          
+                          self.log_result(
+                              "Students Data",
+                              True,
+                              f"{total_students} total students, {active_students} active"
+                          )
+                          
+                      except gspread.exceptions.WorksheetNotFound:
+                          self.log_result("Students Sheet", False, "Students sheet not found")
+                      
+                      # Check Organizations sheet
+                      try:
+                          orgs_sheet = self.spreadsheet.worksheet('Organizations')
+                          orgs_data = orgs_sheet.get_all_records()
+                          
+                          self.log_result(
+                              "Organizations Data",
+                              True,
+                              f"{len(orgs_data)} organizations in database"
+                          )
+                          
+                      except gspread.exceptions.WorksheetNotFound:
+                          self.log_result("Organizations Sheet", False, "Organizations sheet not found")
+                      
+                      # Check Matches sheet (optional)
+                      try:
+                          matches_sheet = self.spreadsheet.worksheet('Matches')
+                          matches_data = matches_sheet.get_all_records()
+                          
+                          self.log_result(
+                              "Matches Data",
+                              True,
+                              f"{len(matches_data)} matches generated"
+                          )
+                          
+                      except gspread.exceptions.WorksheetNotFound:
+                          print("   ℹ️  Matches sheet not found (will be created when matcher runs)")
+                      
+                      return True
+                      
+                  except Exception as e:
+                      self.log_result("Data Freshness", False, f"Error: {str(e)}")
+                      return False
+              
+              def check_workflow_history(self):
+                  """Check recent workflow execution logs"""
+                  print("\n" + "=" * 50)
+                  print("[CHECK 4] WORKFLOW HISTORY")
+                  print("=" * 50)
+                  
+                  if not self.spreadsheet:
+                      self.log_result("Workflow History", False, "No spreadsheet connection")
+                      return False
+                  
+                  try:
+                      log_sheet = self.spreadsheet.worksheet('Workflow_Runs')
+                      log_data = log_sheet.get_all_records()
+                      
+                      if log_data:
+                          total_runs = len(log_data)
+                          
+                          # Get recent runs (last 20)
+                          recent_runs = log_data[-20:]
+                          
+                          # Count successes and failures
+                          successes = sum(1 for r in recent_runs if r.get('status') == 'SUCCESS')
+                          failures = sum(1 for r in recent_runs if r.get('status') == 'FAILED')
+                          
+                          self.log_result(
+                              "Workflow Runs",
+                              True,
+                              f"{total_runs} total runs logged"
+                          )
+                          
+                          if failures > 0:
+                              self.log_result(
+                                  "Recent Failures",
+                                  False,
+                                  f"{failures} failures in last 20 runs (check logs)"
+                              )
+                          else:
+                              self.log_result(
+                                  "Recent Runs",
+                                  True,
+                                  f"Last 20 runs: {successes} successes, {failures} failures"
+                              )
+                          
+                          # Show last 5 runs
+                          print("\n   📋 Last 5 workflow runs:")
+                          for run in reversed(log_data[-5:]):
+                              workflow = run.get('workflow_name', 'Unknown')
+                              status = run.get('status', 'Unknown')
+                              completed = run.get('completed_at', 'Unknown')
+                              icon = "✅" if status == "SUCCESS" else "❌"
+                              print(f"      {icon} {workflow}: {status} ({completed})")
+                          
+                          return True
+                      else:
+                          print("   ℹ️  No workflow runs logged yet")
+                          self.log_result(
+                              "Workflow History",
+                              True,
+                              "No runs logged yet (this is normal for new setup)"
+                          )
+                          return True
+                          
+                  except gspread.exceptions.WorksheetNotFound:
+                      print("   ℹ️  Workflow_Runs sheet not found (will be created automatically)")
+                      return True
+                  except Exception as e:
+                      self.log_result("Workflow History", False, f"Error: {str(e)}")
+                      return False
+              
+              def save_health_report(self):
+                  """Save health check results to spreadsheet"""
+                  if not self.spreadsheet:
+                      print("\n⚠️  Cannot save report - no spreadsheet connection")
+                      return
+                  
+                  try:
+                      # Get or create Health_Checks sheet
+                      try:
+                          health_sheet = self.spreadsheet.worksheet('Health_Checks')
+                      except gspread.exceptions.WorksheetNotFound:
+                          health_sheet = self.spreadsheet.add_worksheet(
+                              title='Health_Checks',
+                              rows=1000,
+                              cols=6
+                          )
+                          health_sheet.update('A1:F1', [[
+                              'check_id', 'timestamp', 'overall_status',
+                              'checks_passed', 'checks_failed', 'details'
+                          ]])
+                      
+                      # Calculate summary
+                      passed = sum(1 for r in self.results if r['passed'])
+                      failed = sum(1 for r in self.results if not r['passed'])
+                      overall = 'HEALTHY' if self.all_passed else 'UNHEALTHY'
+                      
+                      # Create details string
+                      details = "; ".join([
+                          f"{r['check']}: {'PASS' if r['passed'] else 'FAIL'}"
+                          for r in self.results
+                      ])
+                      
+                      # Add row
+                      check_id = f"health_{int(datetime.utcnow().timestamp())}"
+                      new_row = [
+                          check_id,
+                          datetime.utcnow().isoformat(),
+                          overall,
+                          passed,
+                          failed,
+                          details[:500]  # Truncate if too long
+                      ]
+                      health_sheet.append_row(new_row)
+                      
+                      print(f"\n📊 Health report saved to spreadsheet")
+                      
+                  except Exception as e:
+                      print(f"\n⚠️  Could not save health report: {e}")
+              
+              def run_all_checks(self):
+                  """Run all health checks"""
+                  print("=" * 60)
+                  print("🏥 GSoC BUDDY SYSTEM HEALTH CHECK")
+                  print(f"📅 Time: {datetime.utcnow().isoformat()} UTC")
+                  print("=" * 60)
+                  
+                  # Run all checks
+                  self.check_google_sheets()
+                  self.check_github_api()
+                  self.check_data_freshness()
+                  self.check_workflow_history()
+                  
+                  # Save report
+                  self.save_health_report()
+                  
+                  # Print summary
+                  print("\n" + "=" * 60)
+                  print("📊 HEALTH CHECK SUMMARY")
+                  print("=" * 60)
+                  
+                  passed = sum(1 for r in self.results if r['passed'])
+                  failed = sum(1 for r in self.results if not r['passed'])
+                  total = len(self.results)
+                  
+                  print(f"\n   Total Checks: {total}")
+                  print(f"   ✅ Passed: {passed}")
+                  print(f"   ❌ Failed: {failed}")
+                  
+                  print("\n" + "-" * 60)
+                  
+                  if self.all_passed:
+                      print("🎉 ALL SYSTEMS OPERATIONAL")
+                      print("   Your GSoC Buddy agent is healthy and running!")
+                  else:
+                      print("⚠️  ISSUES DETECTED")
+                      print("   Review the failed checks above and take action.")
+                      print("\n   Failed checks:")
+                      for r in self.results:
+                          if not r['passed']:
+                              print(f"   ❌ {r['check']}: {r['message']}")
+                  
+                  print("=" * 60)
+                  
+                  # Exit with error if critical checks failed
+                  if not self.all_passed:
+                      # Only exit with error for critical failures
+                      critical_failures = [
+                          r for r in self.results
+                          if not r['passed'] and r['check'] in [
+                              'Google Sheets Connection',
+                              'GitHub API Connection',
+                              'Spreadsheet ID'
+                          ]
+                      ]
+                      if critical_failures:
+                          sys.exit(1)
+          
+          if __name__ == "__main__":
+              checker = HealthChecker()
+              checker.run_all_checks()
+          PYTHON_SCRIPT
+          
+          python health_check.py
+      
+      - name: Clean up
+        if: always()
+        run: |
+          rm -f service_account.json
+          rm -f health_check.py
