@@ -75,7 +75,8 @@
     },
     "timeline_url": "https://api.github.com/repos/zulip/fakeldap/issues/34/timeline",
     "performed_via_github_app": null,
-    "state_reason": null
+    "state_reason": null,
+    "pinned_comment": null
   },
   {
     "url": "https://api.github.com/repos/zulip/fakeldap/issues/23",
@@ -153,7 +154,8 @@
     },
     "timeline_url": "https://api.github.com/repos/zulip/fakeldap/issues/23/timeline",
     "performed_via_github_app": null,
-    "state_reason": null
+    "state_reason": null,
+    "pinned_comment": null
   },
   {
     "url": "https://api.github.com/repos/zulip/fakeldap/issues/22",
